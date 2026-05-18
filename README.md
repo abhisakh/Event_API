@@ -74,12 +74,17 @@ These tests send HTTP requests to the running backend to assert valid actions.
 *   `test_login_returns_jwt_token`: Contacts `/api/auth/login` with newly registered records to extract valid JWT tokens.
 *   `test_create_public_event_requires_auth_and_succeeds_with_token`: Asserts authorized payloads successfully build new entries at `POST /api/events`.
 *   `test_rsvp_to_public_event_succeeds_without_auth`: Tracks open public gatherings to ensure anyone can seamlessly opt-in without an explicit token.
+*   `test_get_all_events_returns_list`: Hits the core event retrieval node to verify data is successfully delivered inside a valid JSON list array.
 
 #### 3. Integration Tests: Edge Cases & Error Conditions (`tests/test_api.py`)
 These tests check robustness by intentionally feeding bad data or bypassing rules.
 *   `test_duplicate_username_registration_returns_400`: Asserts that trying to use an identical username twice halts duplication workflows with an explicit HTTP 400 response.
 *   `test_create_event_without_auth_returns_401`: Guarantees unauthenticated requests attempting to write an event to `POST /api/events` are rejected with a 401 status code.
+*   `test_create_event_with_missing_required_fields_returns_400`: Intentionally leaves out vital structural parameters (like `title`) to force structural validation failures.
 *   `test_rsvp_to_non_public_event_without_auth_returns_error`: Protects private gatherings from unverified users, checking for error handling defaults.
+*   `test_rsvp_to_non_existent_event_returns_404`: Attaches attendance records to invalid event ID paths to check for database resource handling responses.
+*   `test_get_invalid_event_id_returns_404`: Requests missing records from the backend to ensure route lookups fail gracefully with an HTTP 404 status.
+
 
 ### Running the Test Runner Suite
 Your local development server must be running to process the integration tests.
