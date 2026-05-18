@@ -10,7 +10,7 @@ info:
     email: support@example.com
 
 servers:
-  - url: http://localhost:5000
+  - url: http://localhost:4000
     description: Local development server
   - url: https://api.example.com
     description: Production server
@@ -324,7 +324,7 @@ paths:
         - RSVPs
       summary: RSVP to an event
       description: |
-        RSVP to an event (attending or not attending). 
+        RSVP to an event (attending or not attending).
         - Public events: No authentication required
         - Protected events: Authentication required
         - Admin events: Admin role required
