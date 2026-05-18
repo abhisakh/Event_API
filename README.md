@@ -48,6 +48,29 @@ The API will be available at `http://localhost:5000`
 
 The project includes a robust automated test architecture structured using `pytest`. The test environment contains pure unit tests for database models and end-to-end integration tests targeting a running server.
 
+### Full Project Layout
+```
+.
+├── README.md
+├── app.py
+├── config.py
+├── instance
+│   └── events.db
+├── models.py
+├── openapi.yaml
+├── requirements.txt
+├── routes
+│   ├── __init__.py
+│   ├── auth.py
+│   ├── events.py
+│   └── rsvps.py
+└── tests
+    ├── __init__.py
+    ├── conftest.py
+    ├── test_api.py
+    └── test_models.py
+```
+
 ### Test Directory Layout
 ```text
 tests/
