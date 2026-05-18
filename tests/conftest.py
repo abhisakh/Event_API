@@ -26,10 +26,10 @@ def authenticated_headers(base_url, unique_user_credentials):
     and returns authorization headers containing a valid JWT token.
     """
     # 1. Register
-    requests.post(f"{base_url}/register", json=unique_user_credentials)
+    requests.post(f"{base_url}/api/auth/register", json=unique_user_credentials)
 
     # 2. Login
-    login_response = requests.post(f"{base_url}/login", json=unique_user_credentials)
+    login_response = requests.post(f"{base_url}/api/auth/login", json=unique_user_credentials)
     token = login_response.json().get("access_token")
 
     return {"Authorization": f"Bearer {token}"}
