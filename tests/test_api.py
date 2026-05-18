@@ -51,6 +51,12 @@ def test_rsvp_to_public_event_succeeds_without_auth(base_url, authenticated_head
     assert rsvp_res.status_code in [200, 201]
     assert rsvp_res.json().get("event_id") == event_id
 
+def test_get_all_events_returns_list(base_url):
+    """Happy Path: Verifies that fetching all events returns a 200 OK and a list layout."""
+    response = requests.get(f"{base_url}/api/events")
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
+
 
 # ==========================================
 # 4. ERROR / EDGE-CASE TESTS
@@ -82,6 +88,29 @@ def test_rsvp_to_non_public_event_without_auth_returns_error(base_url, authentic
     # Attempt RSVP without authorization headers
     rsvp_res = requests.post(f"{base_url}/api/rsvps/event/{event_id}", json={})
     assert rsvp_res.status_code in [401, 403, 404] # Depends on security setup
+
+def test_get_invalid_event_id_returns_404(base_url):
+    """Edge Case: Requesting an event ID that does not exist should yield a 404 Not Found."""
+    invalid_id = 999999
+    response = requests.get(f"{base_url}/api/events/{invalid_id}")
+    assert response.status_code == 404
+
+
+def test_create_event_with_missing_required_fields_returns_400(base_url, authenticated_headers):
+    """Edge Case: Sending an event payload without a 'title' should trigger a 400 Bad Request."""
+    incomplete_payload = {
+        "date": "2026-12-01T12:00:00",
+        "is_public": True
+    }
+    response = requests.post(f"{base_url}/api/events", json=incomplete_payload, headers=authenticated_headers)
+    assert response.status_code == 400
+
+
+def test_rsvp_to_non_existent_event_returns_404(base_url, authenticated_headers):
+    """Edge Case: Attempting to RSVP to an event ID that does not exist should return a 404."""
+    invalid_event_id = 888888
+    response = requests.post(f"{base_url}/api/rsvps/event/{invalid_event_id}", json={"attending": True}, headers=authenticated_headers)
+    assert response.status_code == 404
 
 #==============================================================================
 #========================== MY OWN TESTING BLOCK ==============================
