@@ -14,6 +14,7 @@ A Flask-based REST API for managing events and RSVPs with different access level
 - Flask-SQLAlchemy (SQLite database)
 - Flask-CORS
 - Flask-JWT-Extended (JWT authentication)
+- Pytest & Requests (Testing Suite)
 
 ## Setup
 
@@ -42,6 +43,55 @@ python app.py
 ```
 
 The API will be available at `http://localhost:5000`
+
+## Automated Testing Suite
+
+The project includes a robust automated test architecture structured using `pytest`. The test environment contains pure unit tests for database models and end-to-end integration tests targeting a running server.
+
+### Test Directory Layout
+```text
+tests/
+├── __init__.py
+├── conftest.py          # Global configurations, fixtures, and automatic auth tokens
+├── test_models.py       # Isolated Unit Tests (pure Python execution logic, no DB, no HTTP)
+└── test_api.py          # Server Integration Tests (E2E flows targeting live endpoints)
+```
+
+### Detailed Test Specifications
+
+#### 1. Unit Tests (`tests/test_models.py`)
+These tests process pure database model logic inside transient memory. They do not run a server or persist data to a database file.
+*   `test_user_password_hashing_behaves_correctly`: Verifies that `set_password` securely hashes string text and `check_password` validates credentials accurately using `werkzeug`.
+*   `test_user_to_dict_conversion`: Ensures user model components serialize correctly to dictionaries with properly formatted ISO timestamps.
+*   `test_event_to_dict_empty_rsvps`: Confirms that events without attendees gracefully export an empty attendee tracking list.
+*   `test_event_to_dict_with_mocked_rsvps_calculates_counts`: Mocks relational `RSVP` memory entities to verify that `rsvp_count` filters active attendees accurately.
+*   `test_rsvp_to_dict_conversion`: Assures properties map seamlessly inside the RSVP data schema framework.
+
+#### 2. Integration Tests: Happy Paths (`tests/test_api.py`)
+These tests send HTTP requests to the running backend to assert valid actions.
+*   `test_health_endpoint_returns_healthy`: Contacts the root health node to ensure server responsiveness.
+*   `test_register_user_creates_new_user`: Sends data to `/api/auth/register` with dynamic, timestamped usernames to ensure clean account instantiation.
+*   `test_login_returns_jwt_token`: Contacts `/api/auth/login` with newly registered records to extract valid JWT tokens.
+*   `test_create_public_event_requires_auth_and_succeeds_with_token`: Asserts authorized payloads successfully build new entries at `POST /api/events`.
+*   `test_rsvp_to_public_event_succeeds_without_auth`: Tracks open public gatherings to ensure anyone can seamlessly opt-in without an explicit token.
+
+#### 3. Integration Tests: Edge Cases & Error Conditions (`tests/test_api.py`)
+These tests check robustness by intentionally feeding bad data or bypassing rules.
+*   `test_duplicate_username_registration_returns_400`: Asserts that trying to use an identical username twice halts duplication workflows with an explicit HTTP 400 response.
+*   `test_create_event_without_auth_returns_401`: Guarantees unauthenticated requests attempting to write an event to `POST /api/events` are rejected with a 401 status code.
+*   `test_rsvp_to_non_public_event_without_auth_returns_error`: Protects private gatherings from unverified users, checking for error handling defaults.
+
+### Running the Test Runner Suite
+Your local development server must be running to process the integration tests.
+
+1. **Fire up the backend server** in your first terminal workspace:
+   ```bash
+   python app.py
+   ```
+2. **Execute the test collection utility** inside a separate, active terminal tab:
+   ```bash
+   pytest
+   ```
 
 ## Swagger UI Documentation
 
@@ -114,6 +164,7 @@ The API includes interactive Swagger UI documentation. After starting the server
 ## Authentication
 
 For protected endpoints, include the JWT token in the Authorization header:
+
 ```
 Authorization: Bearer <your_jwt_token>
 ```
