@@ -1,4 +1,4 @@
-# 🎉 Evently API
+# 🎉 [Evently API](https://app.masterschool.com/campus/notion/2fe9418319f38050b28be46c296d92d5 )
 
 A Flask-based REST API for managing events and RSVPs with role-based access control. This project serves as an educational platform for learning web security best practices through incremental improvements.
 
