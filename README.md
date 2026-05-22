@@ -113,13 +113,13 @@ tests/
 ├── __init__.py              # Python package initializer
 ├── conftest.py              # Pytest fixtures and configuration
 ├── test_models.py           # Unit tests (5 tests) - Pure Python, no I/O
-└── test_api.py              # Integration tests (8 tests) - HTTP E2E workflows
+└── test_api.py              # Integration tests (13 tests) - HTTP E2E workflows
 ```
 
 **Total Test Count: 13 tests**
 - ✅ **5 Unit Tests**: Database model logic validation
-- ✅ **6 Happy Path Tests**: Successful workflow validation
-- ✅ **7 Error/Edge Case Tests**: Error handling and validation
+- ✅ **6 Happy Path Tests (Integration Test)**: Successful workflow validation
+- ✅ **7 Error/Edge Case Tests (Integration Test)**: Error handling and validation
 
 ---
 
