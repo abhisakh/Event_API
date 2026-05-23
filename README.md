@@ -10,7 +10,7 @@ A Flask-based REST API for managing events and RSVPs with role-based access cont
 ## 📋 Quick Navigation
 
 - [Project Structure](#-project-structure)
-- [Docker Files Explanation](#-docker-files-explanation)
+- [Docker Files Explanation](#Docker Setup & Usage Guide)
 - [Getting Started](#-getting-started)
 - [Database Models](#-database-models)
 - [API Reference](#-api-reference)
@@ -193,7 +193,8 @@ tests/                          # Test suite (13 tests)
 
 ---
 
-## 🐳 Docker Setup & Usage Guide
+<a id ="Docker Setup & Usage Guide"></a>
+## 🐳 Docker Setup & Usage Guide 
 
 ### 1. Local Setup and Build
 
