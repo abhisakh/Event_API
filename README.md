@@ -304,18 +304,31 @@ The `Dockerfile` is the blueprint for your application environment. It ensures t
 
 **Typical Dockerfile Structure:**
 ```dockerfile
-FROM python:3.9-slim
+# Use an official lightweight Python base image
+FROM python:3.11-slim
 
+# Set the working directory inside the container
 WORKDIR /app
 
+# Copy requirements first to leverage Docker's caching mechanism
 COPY requirements.txt .
-RUN pip install -r requirements.txt
 
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code
 COPY . .
 
+# Expose the API port (as specified in README tech stack at my GitHub)
 EXPOSE 4000
 
-CMD ["python", "app.py"]
+# Set environment variables to force Flask to bind to all network interfaces
+ENV FLASK_APP=app.py
+ENV FLASK_RUN_HOST=0.0.0.0
+ENV FLASK_RUN_PORT=4000
+
+# Run the Flask server
+CMD ["flask", "run"]
 ```
 
 ---
@@ -331,19 +344,17 @@ This file acts as the control panel for your container. It defines how the image
 
 **Typical docker-compose.yml Structure:**
 ```yaml
-version: '3.8'
-
 services:
   api:
     build: .
+    image: abhisakh/events-api
+    container_name: events-container
     ports:
       - "4000:4000"
     environment:
       - FLASK_APP=app.py
+      - FLASK_RUN_HOST=0.0.0.0
       - FLASK_RUN_PORT=4000
-    volumes:
-      - .:/app
-    command: python app.py
 ```
 
 ---
