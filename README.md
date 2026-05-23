@@ -10,6 +10,7 @@ A Flask-based REST API for managing events and RSVPs with role-based access cont
 ## 📋 Quick Navigation
 
 - [Project Structure](#-project-structure)
+- [Docker Files Explanation](#-docker-files-explanation)
 - [Getting Started](#-getting-started)
 - [Database Models](#-database-models)
 - [API Reference](#-api-reference)
