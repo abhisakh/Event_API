@@ -1,129 +1,468 @@
-# 🎉 [Evently API](https://app.masterschool.com/campus/notion/2fe9418319f38050b28be46c296d92d5 )
+# 🎉 Evently API - Complete Project Documentation
 
-A Flask-based REST API for managing events and RSVPs with role-based access control. This project serves as an educational platform for learning web security best practices through incremental improvements.
+A Flask-based REST API for managing events and RSVPs with role-based access control. This educational project demonstrates REST API design, JWT authentication, database modeling, and comprehensive testing practices.
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Flask](https://img.shields.io/badge/Flask-3.0.0-green.svg)](https://flask.palletsprojects.com/)
-[![Pytest](https://img.shields.io/badge/Tests-13%20Passing-brightgreen.svg)](https://docs.pytest.org/)
+[![Tests](https://img.shields.io/badge/Tests-13%20Passing-brightgreen.svg)](https://docs.pytest.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## 📋 Table of Contents
+## 📋 Quick Navigation
 
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
 - [Getting Started](#-getting-started)
-- [Usage](#-usage)
-- [Comprehensive Test Suite Documentation](#-comprehensive-test-suite-documentation)
+- [Database Models](#-database-models)
 - [API Reference](#-api-reference)
-- [Security Considerations](#-security-considerations)
+- [Test Suite](#-test-suite)
+- [Designing New Tests](#-designing-new-tests)
 
-## ✨ Features
+---
 
-- **🌐 Public Events**: Open RSVP system without authentication requirements
-- **🔒 Protected Events**: User authentication required for RSVP
-- **👑 Admin Events**: Admin role required for RSVP access
-- **🔐 JWT Authentication**: Secure token-based authentication system
-- **📚 Swagger UI**: Interactive API documentation
-- **✅ Comprehensive Testing**: 13 tests covering unit and integration scenarios
-- **💾 SQLite Database**: Lightweight, file-based database solution
+## 📁 Project Structure
 
-## 🛠 Tech Stack
+```
+evently-api/
+├── README.md                    # Project documentation
+├── Dockerfile                   # Docker image configuration (Python 3.9-slim)
+├── docker-compose.yml           # Docker Compose configuration (build & run)
+├── app.py                       # Flask application factory & initialization
+├── config.py                    # Configuration (secrets, database, JWT settings)
+├── models.py                    # SQLAlchemy models (User, Event, RSVP)
+├── openapi.yaml                 # OpenAPI 3.0 specification
+├── requirements.txt             # Python dependencies (Flask, SQLAlchemy, etc.)
+│
+├── instance/
+│   └── events.db                # SQLite database (auto-created on first run)
+│
+├── routes/                      # API Blueprint modules (organize endpoints)
+│   ├── __init__.py              # Package initializer (empty)
+│   ├── auth.py                  # Authentication (POST /api/auth/register, /api/auth/login)
+│   ├── events.py                # Event management (GET/POST /api/events, GET /api/events/{id})
+│   └── rsvps.py                 # RSVP management (POST/GET /api/rsvps/event/{id})
+│
+└── tests/                       # Automated test suite (13 tests total)
+    ├── __init__.py              # Package initializer (empty)
+    ├── conftest.py              # Pytest configuration & shared fixtures
+    ├── test_models.py           # Unit tests (5 tests) - Pure Python, no I/O
+    └── test_api.py              # Integration tests (8 tests) - HTTP E2E
+```
 
-| Component | Technology | Version |
-|-----------|-----------|---------|
-| **Framework** | Flask | 3.0.0 |
-| **Database ORM** | Flask-SQLAlchemy | Latest |
-| **Database** | SQLite | Built-in |
-| **Authentication** | Flask-JWT-Extended | Latest |
-| **CORS** | Flask-CORS | Latest |
-| **API Documentation** | Flasgger | Latest |
-| **Testing Framework** | Pytest | Latest |
-| **HTTP Client** | Requests | Latest |
+### Root Level Files
+
+| File | Purpose | Details |
+|------|---------|---------|
+| `README.md` | Project documentation | Comprehensive guide for setup, usage, and testing |
+| `Dockerfile` | Docker image blueprint | Defines how to build the application container |
+| `docker-compose.yml` | Container orchestration | Configures port mapping, volumes, and environment |
+| `app.py` | Flask application | Entry point for the API server |
+| `config.py` | Configuration settings | Database URI, JWT secrets, token expiration |
+| `models.py` | Database models | User, Event, RSVP SQLAlchemy classes |
+| `openapi.yaml` | API specification | OpenAPI 3.0 spec for Swagger UI |
+| `requirements.txt` | Python dependencies | All pip packages needed to run |
+
+### File Responsibilities
+
+| File | Purpose | Key Components |
+|------|---------|-----------------|
+| `app.py` | Application factory | `create_app()`, blueprint registration, JWT init |
+| `config.py` | Settings & secrets | `SECRET_KEY`, `JWT_SECRET_KEY`, database URI, token expiration |
+| `models.py` | Database models | `User`, `Event`, `RSVP` classes with relationships |
+| `routes/auth.py` | Authentication | `/register` (POST), `/login` (POST) |
+| `routes/events.py` | Event CRUD | `/events` (GET, POST), `/events/{id}` (GET) |
+| `routes/rsvps.py` | RSVP system | `/rsvps/event/{id}` (POST, GET) with access control |
+| `tests/conftest.py` | Test fixtures | `base_url`, `unique_user_credentials`, `authenticated_headers` |
+| `tests/test_models.py` | Unit tests | 5 database model tests (password, serialization, counting) |
+| `tests/test_api.py` | Integration tests | 8 HTTP endpoint tests (happy paths + error cases) |
+
+### Docker Files Explanation
+
+#### Dockerfile
+
+The `Dockerfile` at the root directory contains:
+```dockerfile
+FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+
+EXPOSE 4000
+
+CMD ["python", "app.py"]
+```
+
+**Purpose**: Defines the blueprint for building a Docker image that:
+- Uses Python 3.9-slim as the lightweight base image
+- Installs all Python dependencies from requirements.txt
+- Copies the entire application to `/app` directory
+- Exposes port 4000 for the Flask API
+- Runs the application with `python app.py`
+
+#### docker-compose.yml
+
+The `docker-compose.yml` at the root directory contains:
+```yaml
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "4000:4000"
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_RUN_PORT=4000
+    volumes:
+      - .:/app
+    command: python app.py
+```
+
+**Purpose**: Orchestrates the Docker container with:
+- Automatic image building from Dockerfile
+- Port mapping (container 4000 → local 4000)
+- Environment variables for Flask configuration
+- Volume mounting for live code reloading during development
+- Container startup command
+
+---
+
+### Directory Structure Details
+
+```
+instance/
+└── events.db                    # SQLite database file
+                                 # Auto-created by Flask-SQLAlchemy
+                                 # Contains: user, event, rsvp tables
+                                 # Remove to reset database
+
+routes/                          # API route blueprints
+├── __init__.py                 # Empty - marks as Python package
+├── auth.py                     # Handles /api/auth/* endpoints
+                                # - User registration
+                                # - User login with JWT generation
+                                # - Password hashing/verification
+│
+├── events.py                   # Handles /api/events/* endpoints
+                                # - List all events (GET /api/events)
+                                # - Create event (POST /api/events) - requires auth
+                                # - Get event by ID (GET /api/events/{id})
+                                # - Date parsing & validation
+│
+└── rsvps.py                    # Handles /api/rsvps/* endpoints
+                                # - Create/update RSVP (POST /api/rsvps/event/{id})
+                                # - Get event RSVPs (GET /api/rsvps/event/{id})
+                                # - Access control (public/protected/admin events)
+                                # - Capacity checking
+
+tests/                          # Test suite (13 tests)
+├── __init__.py                 # Empty - marks as Python package
+├── conftest.py                 # Shared pytest configuration
+                                # - Fixtures for all tests
+                                # - Base URL configuration (http://localhost:4000)
+                                # - Unique user generation (timestamp-based)
+                                # - JWT token creation
+│
+├── test_models.py              # Unit tests (5 tests)
+                                # - test_user_password_hashing_behaves_correctly
+                                # - test_user_to_dict_conversion
+                                # - test_event_to_dict_empty_rsvps
+                                # - test_event_to_dict_with_mocked_rsvps_calculates_counts
+                                # - test_rsvp_to_dict_conversion
+│
+└── test_api.py                 # Integration tests (8 tests)
+                                # Happy Path Tests (6):
+                                # - test_health_endpoint_returns_healthy
+                                # - test_register_user_creates_new_user
+                                # - test_login_returns_jwt_token
+                                # - test_create_public_event_requires_auth_and_succeeds_with_token
+                                # - test_rsvp_to_public_event_succeeds_without_auth
+                                # - test_get_all_events_returns_list
+                                #
+                                # Error Handling Tests (7):
+                                # - test_duplicate_username_registration_returns_400
+                                # - test_create_event_without_auth_returns_401
+                                # - test_rsvp_to_non_public_event_without_auth_returns_error
+                                # - test_get_invalid_event_id_returns_404
+                                # - test_create_event_with_missing_required_fields_returns_400
+                                # - test_rsvp_to_non_existent_event_returns_404
+```
+
+---
+
+## 🐳 Docker Setup & Usage Guide
+
+### 1. Local Setup and Build
+
+Use these commands to build your image and start the container locally using Docker Compose.
+
+**Build and Start:**
+```bash
+docker compose up -d --build
+```
+
+**Check Status:**
+```bash
+docker ps
+```
+
+**Access API:**
+Open `http://localhost:4000/events` in your browser.
+
+---
+
+### 2. Pushing to Docker Hub
+
+To share your image, you must tag it and push it to your repository.
+
+**Login:**
+```bash
+docker login
+```
+
+**Tag Version:**
+```bash
+docker tag abhisakh/events-api:latest abhisakh/events-api:v1.0
+```
+
+**Push Image:**
+```bash
+docker push abhisakh/events-api:v1.0
+```
+
+---
+
+### 3. Pulling and Running from Registry
+
+If you are on a new machine, you can pull the image directly without the source code.
+
+**Pull Image:**
+```bash
+docker pull abhisakh/events-api:latest
+```
+
+**Run Container:**
+```bash
+docker run -d -p 4000:4000 --name events-container abhisakh/events-api:latest
+```
+
+---
+
+### 4. Testing the Docker Container
+
+Once the container is running, verify the setup with these tests.
+
+**Health Check:**
+```bash
+curl http://localhost:4000/api/health
+```
+
+**Run Integration Tests:**
+```bash
+pytest -v
+```
+*(Ensure the container is "Up" first)*
+
+**View Internal Logs:**
+```bash
+docker logs -f events-container
+```
+
+---
+
+### 5. Management Tips
+
+**Stop Project:**
+```bash
+docker compose stop
+```
+
+**Full Cleanup:**
+```bash
+docker compose down
+```
+
+**Inspect Files:**
+Use the Files tab in Docker Desktop to see the `/app` directory.
+
+---
+
+## 🐳 Docker Configuration
+
+### Dockerfile
+
+The `Dockerfile` is the blueprint for your application environment. It ensures that every instance of the app runs with the exact same dependencies and settings.
+
+**Key Features:**
+- **Base Image**: Uses `python:3.9-slim` to provide a lightweight and efficient runtime
+- **Automation**: Handles the installation of all libraries from `requirements.txt` automatically
+- **Portability**: Packages the source code so it can run on any system with Docker installed
+
+**Typical Dockerfile Structure:**
+```dockerfile
+FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+
+EXPOSE 4000
+
+CMD ["python", "app.py"]
+```
+
+---
+
+### docker-compose.yml
+
+This file acts as the control panel for your container. It defines how the image interacts with your computer's hardware and network.
+
+**Key Features:**
+- **One-Command Setup**: Allows you to build and start the entire project using `docker compose up -d`
+- **Port Mapping**: Bridges the container to your local machine (e.g., `4000:4000`) so the API is accessible at `localhost`
+- **Environment Control**: Sets critical Flask variables like `FLASK_APP` and `FLASK_RUN_PORT` dynamically
+
+**Typical docker-compose.yml Structure:**
+```yaml
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "4000:4000"
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_RUN_PORT=4000
+    volumes:
+      - .:/app
+    command: python app.py
+```
+
+---
+
+## 🚀 Usage Instructions
+
+### Local Development
+
+To build and run the project locally for the first time:
+
+```bash
+docker compose up -d --build
+```
+
+**Access the API:**
+- Browser: `http://localhost:4000/events`
+- Health Check: `http://localhost:4000/api/health`
+
+**Run Tests:**
+```bash
+# Ensure the container is active, then run
+pytest -v
+```
+
+---
+
+### Deployment & Distribution
+
+To share your image with others via Docker Hub:
+
+1. **Login to Docker Hub:**
+   ```bash
+   docker login
+   ```
+
+2. **Tag Your Image:**
+   ```bash
+   docker tag abhisakh/events-api:latest abhisakh/events-api:v1.0
+   ```
+
+3. **Push to Registry:**
+   ```bash
+   docker push abhisakh/events-api:v1.0
+   ```
+
+---
+
+### Running from the Cloud
+
+To run the project on a new machine without the source code:
+
+```bash
+# Pull the image from Docker Hub
+docker pull abhisakh/events-api:latest
+
+# Run the container
+docker run -d -p 4000:4000 --name events-container abhisakh/events-api:latest
+```
+
+**Verify It's Running:**
+```bash
+curl http://localhost:4000/api/health
+```
+
+---
+
+### 🛠 Troubleshooting & Management
+
+| Task | Command |
+|------|---------|
+| Stop the App | `docker compose stop` |
+| Remove Container | `docker compose down` |
+| View Logs | `docker compose logs -f` |
+| Inspect Files | Use Files tab in Docker Desktop |
+| Rebuild Image | `docker compose up -d --build` |
+| Full Reset | `docker compose down -v` (removes volumes) |
+
+**View Container Status:**
+```bash
+docker ps
+```
+
+**Check Container Details:**
+```bash
+docker inspect events-container
+```
+
+---
 
 ## 🚀 Getting Started
 
-### Prerequisites
-
-- Python 3.8 or higher
-- pip (Python package manager)
-- Virtual environment (recommended)
-
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd evently-api
-   ```
+```bash
+git clone <repository-url>
+cd evently-api
 
-2. **Create and activate a virtual environment**
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-   **Windows:**
-   ```bash
-   python -m venv venv
-   venv\Scripts\activate
-   ```
+pip install -r requirements.txt
+```
 
-   **Linux/Mac:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate
-   ```
-
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-## 💻 Usage
-
-### Running the Server
-
-Start the Flask development server:
+### Run Server
 
 ```bash
 python app.py
+# Server at http://localhost:4000
 ```
 
-**The API will be available at:** `http://localhost:4000`
+### Run Tests
 
-**Important Notes:**
-- The database file (`events.db`) will be created automatically on first run
-- The first registered user automatically receives admin privileges for demo purposes
-- The server runs on **port 4000** by default
-
-### API Documentation
-
-Once the server is running, access the interactive Swagger UI documentation:
-
-**🔗 Swagger UI**: `http://localhost:4000/apidocs`
-
-**🔗 OpenAPI Spec**: `http://localhost:4000/apispec_1.json`
+```bash
+# Terminal 1: python app.py (keep running)
+# Terminal 2:
+pytest -v
+```
 
 ---
 
-# 🧪 Comprehensive Test Suite Documentation
-
-The Evently API includes a **production-grade automated testing suite** built with `pytest`. The test architecture validates both **isolated unit logic** and **end-to-end integration workflows**, ensuring comprehensive coverage of functionality, security boundaries, and error handling.
-
-## 📁 Test Architecture
-
-```text
-tests/
-├── __init__.py              # Python package initializer
-├── conftest.py              # Pytest fixtures and configuration
-├── test_models.py           # Unit tests (5 tests) - Pure Python, no I/O
-└── test_api.py              # Integration tests (13 tests) - HTTP E2E workflows
-```
-
-**Total Test Count: 13 tests**
-- ✅ **5 Unit Tests**: Database model logic validation
-- ✅ **6 Happy Path Tests (Integration Test)**: Successful workflow validation
-- ✅ **7 Error/Edge Case Tests (Integration Test)**: Error handling and validation
-
----
-
-## 📦 File 1: `conftest.py` - Test Configuration & Fixtures
+## 📦 conftest.py - Test Configuration & Fixtures
 
 **Purpose**: Centralizes pytest configuration, shared fixtures, and utilities used across all test modules.
 
@@ -132,6 +471,7 @@ tests/
 ```python
 BASE_URL = "http://localhost:4000"
 ```
+
 - Defines the API server endpoint for all integration tests
 - Centralized configuration - easy to update if port changes
 - Used by all HTTP request operations
@@ -170,12 +510,12 @@ def test_health_endpoint(base_url):
 **Returns**:
 ```python
 {
-    "username": "user_1737283920123",  # timestamp in milliseconds
+    "username": "user_1737283920123",
     "password": "SecurePassword123"
 }
 ```
 
-**Implementation Details**:
+**Implementation**:
 ```python
 timestamp = int(time.time() * 1000)  # Milliseconds since epoch
 return {
@@ -265,11 +605,23 @@ def test_create_event(base_url, authenticated_headers):
 
 **Token Format**:
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczNzI4MzkyMCwianRpIjoiYWJjMTIzIiwibmJmIjoxNzM3MjgzOTIwLCJzdWIiOjEsInR5cGUiOiJhY2Nlc3MifQ.signature
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.signature
 ```
-- Prefix: `"Bearer "`
+- Prefix: `"Bearer "` (note the space)
 - Token: JWT with header, payload, and signature
-- Valid until expiration (configurable in Flask app)
+- Valid until expiration (1 hour, configurable in config.py)
+
+**JWT Claims**:
+```python
+{
+    "sub": user_id,          # Subject (user ID as string)
+    "iat": issued_timestamp, # Issued at time
+    "exp": expiration_time,  # Expiration time (1 hour later)
+    "is_admin": True/False   # Admin flag from user record
+}
+```
+
+---
 
 ---
 
@@ -301,13 +653,12 @@ def test_user_password_hashing_behaves_correctly():
     user.username = "test_user"
     user.set_password("SecureSecretPass123!")
     
-    # Assertion 1: Hash is NOT equal to plaintext
+    # Raw password text is never exposed explicitly
     assert user.password_hash != "SecureSecretPass123!"
     
-    # Assertion 2: Correct password validates as True
     assert user.check_password("SecureSecretPass123!") is True
     
-    # Assertion 3: Wrong password validates as False
+    # Assert wrong password verification correctly fails
     assert user.check_password("WrongPassword123") is False
 ```
 
@@ -338,7 +689,7 @@ def test_user_password_hashing_behaves_correctly():
 
 **Category**: User Model - Serialization
 
-**Purpose**: Validates the User model correctly serializes to dictionary format suitable for JSON API responses.
+**Purpose**: Validates dictionary output matching the expected layout framework structure.
 
 **What It Tests**:
 - ✅ `to_dict()` method returns all required fields
@@ -349,20 +700,18 @@ def test_user_password_hashing_behaves_correctly():
 **Test Implementation**:
 ```python
 def test_user_to_dict_conversion():
-    # Create User with known test data
+    """Unit Test: Validates dictionary output matching the expected layout framework structure."""
     fixed_time = datetime(2026, 5, 18, 12, 0, 0)
-    
+
     user = User(
         id=42,
         username="admin_guy",
         is_admin=True,
         created_at=fixed_time
     )
-    
-    # Convert to dictionary
+
     user_dict = user.to_dict()
-    
-    # Assert all fields are correct
+
     assert user_dict["id"] == 42
     assert user_dict["username"] == "admin_guy"
     assert user_dict["is_admin"] is True
@@ -406,7 +755,7 @@ def test_user_to_dict_conversion():
 
 **Category**: Event Model - Serialization (Empty State)
 
-**Purpose**: Validates Event model serialization when no attendees have RSVPed (boundary condition).
+**Purpose**: Validates event dictionary exports correctly when there are zero attendees.
 
 **What It Tests**:
 - ✅ `to_dict()` handles zero RSVPs gracefully
@@ -417,12 +766,12 @@ def test_user_to_dict_conversion():
 **Test Implementation**:
 ```python
 def test_event_to_dict_empty_rsvps():
+    """Unit Test: Validates event dictionary exports correctly when there are zero attendees."""
     fixed_time = datetime(2026, 6, 1, 15, 30, 0)
-    
-    # Create Event with empty RSVPs list
+
     event = Event(
         id=101,
-        title="Tech Conference",
+        title= "Tech Conference",
         description="A great developer meetup",
         date=fixed_time,
         location="Room A",
@@ -431,12 +780,11 @@ def test_event_to_dict_empty_rsvps():
         requires_admin=False,
         created_by=42,
         created_at=fixed_time,
-        rsvps=[]  # Explicitly empty
+        rsvps=[] # Explicitly pass empty list to mock relationship
     )
-    
+
     event_dict = event.to_dict()
-    
-    # Validate structure
+
     assert event_dict["id"] == 101
     assert event_dict["title"] == "Tech Conference"
     assert event_dict["rsvp_count"] == 0
@@ -487,7 +835,7 @@ def test_event_to_dict_empty_rsvps():
 
 **Category**: Event Model - Serialization (With Data)
 
-**Purpose**: Validates Event model serialization with RSVPs and ensures accurate attendee filtering.
+**Purpose**: Validates tracking calculations for event RSVPs without interacting with DB engines.
 
 **What It Tests**:
 - ✅ `to_dict()` correctly processes RSVP relationships
@@ -498,26 +846,28 @@ def test_event_to_dict_empty_rsvps():
 **Test Implementation**:
 ```python
 def test_event_to_dict_with_mocked_rsvps_calculates_counts():
+    """Unit Test: Validates tracking calculations for event RSVPs without interacting with DB engines."""
     fixed_time = datetime(2026, 6, 1, 15, 30, 0)
-    
-    # Create mock RSVP objects
-    rsvp1 = RSVP(user_id=11, attending=True)   # Attending
-    rsvp2 = RSVP(user_id=12, attending=False)  # Not attending
-    rsvp3 = RSVP(user_id=13, attending=True)   # Attending
-    
-    # Create Event with RSVPs
+
+    # simulate relationship tables
+    rsvp1 = RSVP(user_id=11, attending=True)
+    rsvp2 = RSVP(user_id=12, attending=False) # Not attending, shouldn't show in user list
+    rsvp3 = RSVP(user_id=13, attending=True)
+
     event = Event(
         id=202,
         title="Exclusive Workshop",
         date=fixed_time,
         rsvps=[rsvp1, rsvp2, rsvp3]
     )
-    
+
     event_dict = event.to_dict()
-    
-    # Validate counts and filtering
-    assert event_dict["rsvp_count"] == 3        # Total RSVPs
-    assert event_dict["attendees"] == [11, 13]  # Only attending users
+
+    # Total linked records counted
+    assert event_dict["rsvp_count"] == 3
+
+    # Only active, attending user IDs filtered out into final listing array
+    assert event_dict["attendees"] == [11, 13]
 ```
 
 **Business Logic Validation**:
@@ -565,7 +915,7 @@ attendees = [rsvp.user_id for rsvp in event.rsvps if rsvp.attending]
 
 **Category**: RSVP Model - Serialization
 
-**Purpose**: Validates RSVP model serialization ensures proper data mapping.
+**Purpose**: Validates RSVP properties populate dictionary mapping arrays cleanly.
 
 **What It Tests**:
 - ✅ `to_dict()` returns all required RSVP fields
@@ -576,9 +926,9 @@ attendees = [rsvp.user_id for rsvp in event.rsvps if rsvp.attending]
 **Test Implementation**:
 ```python
 def test_rsvp_to_dict_conversion():
+    """Unit Test: Validates RSVP properties populate dictionary mapping arrays cleanly."""
     fixed_time = datetime(2026, 5, 18, 16, 0, 0)
-    
-    # Create RSVP instance
+
     rsvp = RSVP(
         id=7,
         event_id=101,
@@ -586,10 +936,9 @@ def test_rsvp_to_dict_conversion():
         attending=True,
         created_at=fixed_time
     )
-    
+
     rsvp_dict = rsvp.to_dict()
-    
-    # Validate all fields
+
     assert rsvp_dict["id"] == 7
     assert rsvp_dict["event_id"] == 101
     assert rsvp_dict["user_id"] == 11
@@ -649,7 +998,12 @@ def test_rsvp_to_dict_conversion():
 
 **Category**: Integration - Health Check
 
-**Purpose**: Validates basic server connectivity and health status.
+**Purpose**: Check server running health status.
+
+**What It Tests**:
+- ✅ Server is running and accessible
+- ✅ Health endpoint responds with 200 status
+- ✅ Response contains "healthy" indicator
 
 **HTTP Request**:
 ```http
@@ -659,10 +1013,10 @@ GET http://localhost:4000/api/health
 **Test Implementation**:
 ```python
 def test_health_endpoint_returns_healthy(base_url):
+    """Happy Path 1: Check server running health status."""
     response = requests.get(f"{base_url}/api/health")
     assert response.status_code == 200
-    assert "healthy" in response.text.lower() or \
-           response.json().get("status") == "healthy"
+    assert "healthy" in response.text.lower() or response.json().get("status") == "healthy"
 ```
 
 **Expected Response** (200 OK):
@@ -694,7 +1048,13 @@ def test_health_endpoint_returns_healthy(base_url):
 
 **Category**: Integration - Authentication
 
-**Purpose**: Validates complete user registration workflow.
+**Purpose**: Register a user with a unique timestamped name.
+
+**What It Tests**:
+- ✅ User registration succeeds
+- ✅ Returns 201 Created status
+- ✅ User object included in response
+- ✅ Username matches request payload
 
 **Fixtures Used**:
 - `base_url` - API endpoint
@@ -714,13 +1074,10 @@ Content-Type: application/json
 **Test Implementation**:
 ```python
 def test_register_user_creates_new_user(base_url, unique_user_credentials):
-    response = requests.post(
-        f"{base_url}/api/auth/register", 
-        json=unique_user_credentials
-    )
+    """Happy Path 2: Register a user with a unique timestamped name."""
+    response = requests.post(f"{base_url}/api/auth/register", json=unique_user_credentials)
     assert response.status_code == 201
-    assert response.json()["user"]["username"] == \
-           unique_user_credentials["username"]
+    assert response.json()["user"]["username"] == unique_user_credentials["username"]
 ```
 
 **Expected Response** (201 Created):
@@ -760,7 +1117,13 @@ def test_register_user_creates_new_user(base_url, unique_user_credentials):
 
 **Category**: Integration - Authentication
 
-**Purpose**: Validates authentication workflow and JWT token generation.
+**Purpose**: Log in with known user and retrieve a JWT.
+
+**What It Tests**:
+- ✅ Login endpoint works with valid credentials
+- ✅ Returns 200 OK status
+- ✅ Response contains JWT access_token
+- ✅ User object returned with token
 
 **Fixtures Used**:
 - `base_url` - API endpoint
@@ -795,17 +1158,12 @@ Content-Type: application/json
 **Test Implementation**:
 ```python
 def test_login_returns_jwt_token(base_url, unique_user_credentials):
-    # Register user first
-    requests.post(
-        f"{base_url}/api/auth/register", 
-        json=unique_user_credentials
-    )
-    
+    """Happy Path 3: Log in with known user and retrieve a JWT."""
+    # Register the user first
+    requests.post(f"{base_url}/api/auth/register", json=unique_user_credentials)
+
     # Attempt login
-    response = requests.post(
-        f"{base_url}/api/auth/login", 
-        json=unique_user_credentials
-    )
+    response = requests.post(f"{base_url}/api/auth/login", json=unique_user_credentials)
     assert response.status_code == 200
     assert "access_token" in response.json()
 ```
@@ -813,7 +1171,7 @@ def test_login_returns_jwt_token(base_url, unique_user_credentials):
 **Expected Response** (200 OK):
 ```json
 {
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczNzI4MzkyMCwianRpIjoiYWJjMTIzIiwibmJmIjoxNzM3MjgzOTIwLCJzdWIiOjEsInR5cGUiOiJhY2Nlc3MifQ.signature",
     "user": {
         "id": 1,
         "username": "user_1737283920456",
@@ -848,7 +1206,13 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImlhdCI6MTczNzI4MzkyMH0.signatu
 
 **Category**: Integration - Event Management
 
-**Purpose**: Validates authenticated event creation workflow.
+**Purpose**: Call POST /events with a valid JWT payload.
+
+**What It Tests**:
+- ✅ Event creation with JWT authentication works
+- ✅ Returns 201 Created status
+- ✅ Event data correctly persisted
+- ✅ All event fields in response
 
 **Fixtures Used**:
 - `base_url` - API endpoint
@@ -869,19 +1233,14 @@ Content-Type: application/json
 
 **Test Implementation**:
 ```python
-def test_create_public_event_requires_auth_and_succeeds_with_token(
-    base_url, authenticated_headers
-):
+def test_create_public_event_requires_auth_and_succeeds_with_token(base_url, authenticated_headers):
+    """Happy Path 4: Call POST /events with a valid JWT payload."""
     event_payload = {
         "title": "Public Networking Event",
         "date": "2026-06-01",
         "is_public": True
     }
-    response = requests.post(
-        f"{base_url}/api/events", 
-        json=event_payload, 
-        headers=authenticated_headers
-    )
+    response = requests.post(f"{base_url}/api/events", json=event_payload, headers=authenticated_headers)
     assert response.status_code == 201
     assert response.json().get("title") == "Public Networking Event"
 ```
@@ -926,7 +1285,13 @@ def test_create_public_event_requires_auth_and_succeeds_with_token(
 
 **Category**: Integration - RSVP System
 
-**Purpose**: Validates public events allow RSVPs without authentication.
+**Purpose**: Create a public event first, then RSVP without any auth token.
+
+**What It Tests**:
+- ✅ Public events allow unauthenticated RSVPs
+- ✅ Returns 200/201 status
+- ✅ RSVP created with correct event_id
+- ✅ No authentication required for public events
 
 **Fixtures Used**:
 - `base_url` - API endpoint
@@ -959,27 +1324,15 @@ Content-Type: application/json
 
 **Test Implementation**:
 ```python
-def test_rsvp_to_public_event_succeeds_without_auth(
-    base_url, authenticated_headers
-):
-    # Create public event
-    event_payload = {
-        "title": "Open House", 
-        "date": "2026-07-01", 
-        "is_public": True
-    }
-    create_res = requests.post(
-        f"{base_url}/api/events", 
-        json=event_payload, 
-        headers=authenticated_headers
-    )
+def test_rsvp_to_public_event_succeeds_without_auth(base_url, authenticated_headers):
+    """Happy Path 5: Create a public event first, then RSVP without any auth token."""
+    # Create the public event with credentials
+    event_payload = {"title": "Open House", "date": "2026-07-01", "is_public": True}
+    create_res = requests.post(f"{base_url}/api/events", json=event_payload, headers=authenticated_headers)
     event_id = create_res.json().get("id")
-    
-    # RSVP without authentication
-    rsvp_res = requests.post(
-        f"{base_url}/api/rsvps/event/{event_id}", 
-        json={}
-    )
+
+    # RSVP without using authenticated headers
+    rsvp_res = requests.post(f"{base_url}/api/rsvps/event/{event_id}", json={})
     assert rsvp_res.status_code in [200, 201]
     assert rsvp_res.json().get("event_id") == event_id
 ```
@@ -1017,7 +1370,12 @@ def test_rsvp_to_public_event_succeeds_without_auth(
 
 **Category**: Integration - Event Retrieval
 
-**Purpose**: Verifies fetching all events returns a properly formatted list.
+**Purpose**: Verifies that fetching all events returns a 200 OK and a list layout.
+
+**What It Tests**:
+- ✅ GET /api/events returns 200 OK status
+- ✅ Response is a list (array) type
+- ✅ Empty list valid if no events exist
 
 **HTTP Request**:
 ```http
@@ -1027,6 +1385,7 @@ GET http://localhost:4000/api/events
 **Test Implementation**:
 ```python
 def test_get_all_events_returns_list(base_url):
+    """Happy Path: Verifies that fetching all events returns a 200 OK and a list layout."""
     response = requests.get(f"{base_url}/api/events")
     assert response.status_code == 200
     assert isinstance(response.json(), list)
@@ -1072,7 +1431,13 @@ def test_get_all_events_returns_list(base_url):
 
 **Category**: Integration - Error Handling
 
-**Purpose**: Validates duplicate usernames are properly rejected.
+**Purpose**: Registering duplicate username returns a bad request error.
+
+**What It Tests**:
+- ✅ First registration succeeds
+- ✅ Duplicate username properly rejected
+- ✅ Returns 400 Bad Request status
+- ✅ Database constraint enforced
 
 **Test Flow**:
 1. Register user (succeeds)
@@ -1101,21 +1466,14 @@ Content-Type: application/json
 
 **Test Implementation**:
 ```python
-def test_duplicate_username_registration_returns_400(
-    base_url, unique_user_credentials
-):
+def test_duplicate_username_registration_returns_400(base_url, unique_user_credentials):
+    """Edge Case 1: Registering duplicate username returns a bad request error."""
     # First registration succeeds
-    res1 = requests.post(
-        f"{base_url}/api/auth/register", 
-        json=unique_user_credentials
-    )
+    res1 = requests.post(f"{base_url}/api/auth/register", json=unique_user_credentials)
     assert res1.status_code == 201
-    
-    # Second registration fails
-    res2 = requests.post(
-        f"{base_url}/api/auth/register", 
-        json=unique_user_credentials
-    )
+
+    # Second registration with exact same username fails
+    res2 = requests.post(f"{base_url}/api/auth/register", json=unique_user_credentials)
     assert res2.status_code == 400
 ```
 
@@ -1144,7 +1502,12 @@ def test_duplicate_username_registration_returns_400(
 
 **Category**: Integration - Security
 
-**Purpose**: Validates event creation requires authentication.
+**Purpose**: Attempting to create an event with no token returns 401 Unauthorized.
+
+**What It Tests**:
+- ✅ Event creation requires authentication
+- ✅ Missing token returns 401 Unauthorized status
+- ✅ Event NOT created without auth
 
 **HTTP Request**:
 ```http
@@ -1162,15 +1525,9 @@ Content-Type: application/json
 **Test Implementation**:
 ```python
 def test_create_event_without_auth_returns_401(base_url):
-    event_payload = {
-        "title": "Secret Event", 
-        "date": "2026-08-01", 
-        "is_public": True
-    }
-    response = requests.post(
-        f"{base_url}/api/events", 
-        json=event_payload
-    )  # No headers sent
+    """Edge Case 2: Attempting to create an event with no token returns 401 Unauthorized."""
+    event_payload = {"title": "Secret Event", "date": "2026-08-01", "is_public": True}
+    response = requests.post(f"{base_url}/api/events", json=event_payload) # No headers sent
     assert response.status_code == 401
 ```
 
@@ -1198,7 +1555,13 @@ def test_create_event_without_auth_returns_401(base_url):
 
 **Category**: Integration - Access Control
 
-**Purpose**: Validates protected events reject unauthenticated RSVPs.
+**Purpose**: RSVPs to private events without a token are blocked.
+
+**What It Tests**:
+- ✅ Protected events require authentication
+- ✅ Unauthenticated RSVP to private event rejected
+- ✅ Returns 401/403/404 status
+- ✅ RSVP NOT created
 
 **Test Flow**:
 1. Create private event (with auth)
@@ -1227,28 +1590,16 @@ Content-Type: application/json
 
 **Test Implementation**:
 ```python
-def test_rsvp_to_non_public_event_without_auth_returns_error(
-    base_url, authenticated_headers
-):
-    # Create private event
-    event_payload = {
-        "title": "Private Board Meeting", 
-        "date": "2026-09-01", 
-        "is_public": False
-    }
-    create_res = requests.post(
-        f"{base_url}/api/events", 
-        json=event_payload, 
-        headers=authenticated_headers
-    )
+def test_rsvp_to_non_public_event_without_auth_returns_error(base_url, authenticated_headers):
+    """Edge Case 3: RSVPs to private events without a token are blocked."""
+    # Create a private non-public event
+    event_payload = {"title": "Private Board Meeting", "date": "2026-09-01", "is_public": False}
+    create_res = requests.post(f"{base_url}/api/events", json=event_payload, headers=authenticated_headers)
     event_id = create_res.json().get("id")
-    
-    # Attempt RSVP without auth
-    rsvp_res = requests.post(
-        f"{base_url}/api/rsvps/event/{event_id}", 
-        json={}
-    )
-    assert rsvp_res.status_code in [401, 403, 404]
+
+    # Attempt RSVP without authorization headers
+    rsvp_res = requests.post(f"{base_url}/api/rsvps/event/{event_id}", json={})
+    assert rsvp_res.status_code in [401, 403, 404] # Depends on security setup
 ```
 
 **Possible Error Responses**:
@@ -1294,7 +1645,11 @@ def test_rsvp_to_non_public_event_without_auth_returns_error(
 
 **Category**: Integration - Error Handling
 
-**Purpose**: Validates requesting non-existent events returns 404.
+**Purpose**: Requesting an event ID that does not exist should yield a 404 Not Found.
+
+**What It Tests**:
+- ✅ Non-existent event returns 404 status
+- ✅ Proper error handling for missing resources
 
 **HTTP Request**:
 ```http
@@ -1304,6 +1659,7 @@ GET http://localhost:4000/api/events/999999
 **Test Implementation**:
 ```python
 def test_get_invalid_event_id_returns_404(base_url):
+    """Edge Case: Requesting an event ID that does not exist should yield a 404 Not Found."""
     invalid_id = 999999
     response = requests.get(f"{base_url}/api/events/{invalid_id}")
     assert response.status_code == 404
@@ -1312,8 +1668,7 @@ def test_get_invalid_event_id_returns_404(base_url):
 **Expected Response** (404 Not Found):
 ```json
 {
-    "error": "Event not found",
-    "message": "No event exists with ID 999999"
+    "error": "Event not found"
 }
 ```
 
@@ -1332,7 +1687,13 @@ def test_get_invalid_event_id_returns_404(base_url):
 
 **Category**: Integration - Input Validation
 
-**Purpose**: Validates event creation requires all mandatory fields.
+**Purpose**: Sending an event payload without a 'title' should trigger a 400 Bad Request.
+
+**What It Tests**:
+- ✅ Event creation requires all mandatory fields
+- ✅ Missing title returns 400 status
+- ✅ Input validation enforced
+- ✅ Event NOT created with incomplete data
 
 **HTTP Request**:
 ```http
@@ -1349,19 +1710,13 @@ Content-Type: application/json
 
 **Test Implementation**:
 ```python
-def test_create_event_with_missing_required_fields_returns_400(
-    base_url, authenticated_headers
-):
+def test_create_event_with_missing_required_fields_returns_400(base_url, authenticated_headers):
+    """Edge Case: Sending an event payload without a 'title' should trigger a 400 Bad Request."""
     incomplete_payload = {
         "date": "2026-12-01T12:00:00",
         "is_public": True
-        # Missing "title"
     }
-    response = requests.post(
-        f"{base_url}/api/events", 
-        json=incomplete_payload, 
-        headers=authenticated_headers
-    )
+    response = requests.post(f"{base_url}/api/events", json=incomplete_payload, headers=authenticated_headers)
     assert response.status_code == 400
 ```
 
@@ -1390,7 +1745,12 @@ def test_create_event_with_missing_required_fields_returns_400(
 
 **Category**: Integration - Error Handling
 
-**Purpose**: Validates RSVPing to non-existent events returns 404.
+**Purpose**: Attempting to RSVP to an event ID that does not exist should return a 404.
+
+**What It Tests**:
+- ✅ Non-existent event returns 404 status
+- ✅ RSVP NOT created for invalid event
+- ✅ Referential integrity enforced
 
 **HTTP Request**:
 ```http
@@ -1405,15 +1765,10 @@ Content-Type: application/json
 
 **Test Implementation**:
 ```python
-def test_rsvp_to_non_existent_event_returns_404(
-    base_url, authenticated_headers
-):
+def test_rsvp_to_non_existent_event_returns_404(base_url, authenticated_headers):
+    """Edge Case: Attempting to RSVP to an event ID that does not exist should return a 404."""
     invalid_event_id = 888888
-    response = requests.post(
-        f"{base_url}/api/rsvps/event/{invalid_event_id}", 
-        json={"attending": True}, 
-        headers=authenticated_headers
-    )
+    response = requests.post(f"{base_url}/api/rsvps/event/{invalid_event_id}", json={"attending": True}, headers=authenticated_headers)
     assert response.status_code == 404
 ```
 
@@ -1435,466 +1790,491 @@ def test_rsvp_to_non_existent_event_returns_404(
 
 ---
 
-## 🚀 Running the Complete Test Suite
+## 💾 Database Models
 
-### Prerequisites
+### Model 1: User
 
-1. **Server MUST be running** on port 4000
-2. Virtual environment activated
-3. Dependencies installed
-
-### Step-by-Step Guide
-
-#### Step 1: Start the Flask Server
-
-**Terminal 1:**
-```bash
-# Activate virtual environment
-# Windows:
-venv\Scripts\activate
-# Linux/Mac:
-source venv/bin/activate
-
-# Start server
-python app.py
+```python
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    
+    rsvps = db.relationship('RSVP', backref='user', lazy=True)
+    events = db.relationship('Event', backref='creator', lazy=True)
+    
+    def set_password(password):
+        # Hash plaintext password using werkzeug
+        
+    def check_password(password) -> bool:
+        # Verify password against hash
+        
+    def to_dict() -> dict:
+        # Returns: {id, username, is_admin, created_at}
+        # Excludes: password_hash (security)
 ```
 
-**Expected Output:**
-```
- * Serving Flask app 'app'
- * Debug mode: on
- * Running on http://127.0.0.1:4000
-```
-
-⚠️ **Wait for this output before proceeding**
-
-#### Step 2: Run Tests
-
-**Terminal 2:**
-```bash
-# Activate virtual environment
-# Windows:
-venv\Scripts\activate
-# Linux/Mac:
-source venv/bin/activate
-
-# Run all tests
-pytest
-```
-
-### Test Execution Commands
-
-| Command | Purpose |
-|---------|---------|
-| `pytest` | Run all tests (minimal output) |
-| `pytest -v` | Verbose output with test names |
-| `pytest -v -s` | Verbose + show print statements |
-| `pytest tests/test_models.py` | Run only unit tests |
-| `pytest tests/test_api.py` | Run only integration tests |
-| `pytest tests/test_api.py::test_health_endpoint_returns_healthy -v` | Run specific test |
-| `pytest --cov=. --cov-report=html` | Generate coverage report |
-| `pytest -x` | Stop at first failure |
-| `pytest -k "auth"` | Run tests matching "auth" |
-
-### Expected Output
-
-**Successful Run:**
-```
-========================= test session starts ==========================
-platform win32 -- Python 3.11.0, pytest-7.4.0, pluggy-1.0.0
-rootdir: C:\projects\evently-api
-collected 13 items
-
-tests/test_models.py .....                                      [ 38%]
-tests/test_api.py ........                                      [100%]
-
-========================= 13 passed in 5.23s ===========================
-```
-
-**Test Breakdown:**
-- ✅ 5 Unit Tests (test_models.py)
-- ✅ 8 Integration Tests (test_api.py)
-- ✅ **Total: 13 tests**
-
-### Troubleshooting
-
-#### ❌ Connection Refused
-```
-requests.exceptions.ConnectionError
-```
-**Solution**: Start Flask server first
-
-#### ❌ Wrong Port
-```
-Connection refused at localhost:5000
-```
-**Solution**: Verify server runs on port 4000
-
-#### ❌ Import Errors
-```
-ModuleNotFoundError: No module named 'pytest'
-```
-**Solution**: 
-```bash
-pip install -r requirements.txt
-```
+**Key Rules**:
+- ✅ Username is unique
+- ✅ First user becomes admin
+- ✅ Password hashed before storage
+- ✅ Password never exposed in responses
 
 ---
 
-## 📊 Test Coverage Summary
+### Model 2: Event
 
-| Category | Count | Percentage |
-|----------|-------|------------|
-| **Unit Tests** | 5 | 38% |
-| **Integration (Happy)** | 6 | 46% |
-| **Integration (Error)** | 7 | 54% |
-| **Total Tests** | **13** | **100%** |
+```python
+class Event(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    date = db.Column(db.DateTime, nullable=False)
+    location = db.Column(db.String(200), nullable=True)
+    capacity = db.Column(db.Integer, nullable=True)
+    is_public = db.Column(db.Boolean, default=True, nullable=False)
+    requires_admin = db.Column(db.Boolean, default=False, nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    
+    rsvps = db.relationship('RSVP', backref='event', lazy=True, cascade='all, delete-orphan')
+    
+    def to_dict() -> dict:
+        # Returns: {all fields above, rsvp_count, attendees}
+        # rsvp_count = total RSVPs
+        # attendees = user_ids where attending=True
+```
 
-### Coverage by Feature
-
-| Feature | Tests | Coverage |
-|---------|-------|----------|
-| **Authentication** | 4 | Registration, Login, JWT, Duplicates |
-| **Event Management** | 5 | Create, List, Get, Validation |
-| **RSVP System** | 3 | Public RSVP, Private RSVP, Validation |
-| **Access Control** | 2 | Auth Required, Public Access |
-| **Error Handling** | 4 | 404s, 400s, 401s |
+**Access Control**:
+| Type | `is_public` | `requires_admin` | RSVP Auth? |
+|------|-------------|------------------|-----------|
+| Public | True | False | No |
+| Protected | False | False | Yes (any user) |
+| Admin | False | True | Yes (admin only) |
 
 ---
 
-## 📖 API Reference
+### Model 3: RSVP
 
-### Base URL
-```
-http://localhost:4000
-```
-
-### Authentication Endpoints
-
-#### Register User
-```http
-POST /api/auth/register
-Content-Type: application/json
-
-{
-    "username": "newuser",
-    "password": "SecurePass123"
-}
+```python
+class RSVP(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    attending = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    
+    def to_dict() -> dict:
+        # Returns: {id, event_id, user_id, attending, created_at}
 ```
 
-**Response (201):**
-```json
-{
-    "message": "User created successfully",
-    "user": {
-        "id": 1,
-        "username": "newuser",
-        "is_admin": false
-    }
-}
-```
-
-#### Login
-```http
-POST /api/auth/login
-Content-Type: application/json
-
-{
-    "username": "newuser",
-    "password": "SecurePass123"
-}
-```
-
-**Response (200):**
-```json
-{
-    "access_token": "eyJhbGc...",
-    "user": { ... }
-}
-```
-
-### Event Endpoints
-
-#### Get All Events
-```http
-GET /api/events
-```
-
-#### Get Event by ID
-```http
-GET /api/events/{event_id}
-```
-
-#### Create Event (Protected)
-```http
-POST /api/events
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-    "title": "My Event",
-    "date": "2026-06-01",
-    "is_public": true
-}
-```
-
-### RSVP Endpoints
-
-#### RSVP to Event
-```http
-POST /api/rsvps/event/{event_id}
-Content-Type: application/json
-
-{
-    "attending": true
-}
-```
+**Key Points**:
+- ✅ `user_id` can be None (anonymous RSVPs)
+- ✅ `attending=True` means attending, `False` means declined
+- ✅ One RSVP per user per event (POST updates existing)
+- ✅ Capacity checks only count attending=True
 
 ---
 
-## 🔐 Security Considerations
+## 🔌 API Reference
 
-### Current Features
-- ✅ Password hashing (werkzeug)
-- ✅ JWT authentication
-- ✅ Role-based access control
-- ✅ SQLAlchemy ORM
-
-### Recommended Improvements
-- 🔄 Bcrypt/Argon2 password hashing
-- 🔄 JWT refresh tokens
-- 🔄 Rate limiting
-- 🔄 Input validation
-- 🔄 HTTPS enforcement
-- 🔄 Logging & monitoring
-
-⚠️ **Educational project - not production-ready**
-
----
-
-## 📄 License
-
-MIT License
-
----
-
-**Made with ❤️ for learning web development and security**
-
-
-# Evently API
-
-A Flask-based REST API for managing events and RSVPs with different access levels. This API is designed to teach web security best practices through incremental improvements.
-
-## Features
-
-- **Public Events**: Anyone can RSVP without authentication
-- **Protected Events**: Requires user authentication to RSVP
-- **Admin Events**: Requires admin role to RSVP
-
-## Tech Stack
-
-- Flask 3.0.0
-- Flask-SQLAlchemy (SQLite database)
-- Flask-CORS
-- Flask-JWT-Extended (JWT authentication)
-- Pytest & Requests (Testing Suite)
-
-## Setup
-
-1. Create and activate a virtual environment:
-
-   **Windows:**
-   ```bash
-   python -m venv venv
-   venv\Scripts\activate
-   ```
-
-   **Linux/Mac:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate
-   ```
-
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-3. Run the application:
-```bash
-python app.py
-```
-
-The API will be available at `http://localhost:5000`
-
-## Automated Testing Suite
-
-The project includes a robust automated test architecture structured using `pytest`. The test environment contains pure unit tests for database models and end-to-end integration tests targeting a running server.
-
-### Full Project Layout
-```
-.
-├── README.md
-├── app.py
-├── config.py
-├── instance
-│   └── events.db
-├── models.py
-├── openapi.yaml
-├── requirements.txt
-├── routes
-│   ├── __init__.py
-│   ├── auth.py
-│   ├── events.py
-│   └── rsvps.py
-└── tests
-    ├── __init__.py
-    ├── conftest.py
-    ├── test_api.py
-    └── test_models.py
-```
-
-### Test Directory Layout
-```text
-tests/
-├── __init__.py
-├── conftest.py          # Global configurations, fixtures, and automatic auth tokens
-├── test_models.py       # Isolated Unit Tests (pure Python execution logic, no DB, no HTTP)
-└── test_api.py          # Server Integration Tests (E2E flows targeting live endpoints)
-```
-
-### Detailed Test Specifications
-
-#### 1. Unit Tests (`tests/test_models.py`)
-These tests process pure database model logic inside transient memory. They do not run a server or persist data to a database file.
-*   `test_user_password_hashing_behaves_correctly`: Verifies that `set_password` securely hashes string text and `check_password` validates credentials accurately using `werkzeug`.
-*   `test_user_to_dict_conversion`: Ensures user model components serialize correctly to dictionaries with properly formatted ISO timestamps.
-*   `test_event_to_dict_empty_rsvps`: Confirms that events without attendees gracefully export an empty attendee tracking list.
-*   `test_event_to_dict_with_mocked_rsvps_calculates_counts`: Mocks relational `RSVP` memory entities to verify that `rsvp_count` filters active attendees accurately.
-*   `test_rsvp_to_dict_conversion`: Assures properties map seamlessly inside the RSVP data schema framework.
-
-#### 2. Integration Tests: Happy Paths (`tests/test_api.py`)
-These tests send HTTP requests to the running backend to assert valid actions.
-*   `test_health_endpoint_returns_healthy`: Contacts the root health node to ensure server responsiveness.
-*   `test_register_user_creates_new_user`: Sends data to `/api/auth/register` with dynamic, timestamped usernames to ensure clean account instantiation.
-*   `test_login_returns_jwt_token`: Contacts `/api/auth/login` with newly registered records to extract valid JWT tokens.
-*   `test_create_public_event_requires_auth_and_succeeds_with_token`: Asserts authorized payloads successfully build new entries at `POST /api/events`.
-*   `test_rsvp_to_public_event_succeeds_without_auth`: Tracks open public gatherings to ensure anyone can seamlessly opt-in without an explicit token.
-*   `test_get_all_events_returns_list`: Hits the core event retrieval node to verify data is successfully delivered inside a valid JSON list array.
-
-#### 3. Integration Tests: Edge Cases & Error Conditions (`tests/test_api.py`)
-These tests check robustness by intentionally feeding bad data or bypassing rules.
-*   `test_duplicate_username_registration_returns_400`: Asserts that trying to use an identical username twice halts duplication workflows with an explicit HTTP 400 response.
-*   `test_create_event_without_auth_returns_401`: Guarantees unauthenticated requests attempting to write an event to `POST /api/events` are rejected with a 401 status code.
-*   `test_create_event_with_missing_required_fields_returns_400`: Intentionally leaves out vital structural parameters (like `title`) to force structural validation failures.
-*   `test_rsvp_to_non_public_event_without_auth_returns_error`: Protects private gatherings from unverified users, checking for error handling defaults.
-*   `test_rsvp_to_non_existent_event_returns_404`: Attaches attendance records to invalid event ID paths to check for database resource handling responses.
-*   `test_get_invalid_event_id_returns_404`: Requests missing records from the backend to ensure route lookups fail gracefully with an HTTP 404 status.
-
-
-### Running the Test Runner Suite
-Your local development server must be running to process the integration tests.
-
-1. **Fire up the backend server** in your first terminal workspace:
-   ```bash
-   python app.py
-   ```
-2. **Execute the test collection utility** inside a separate, active terminal tab:
-   ```bash
-   pytest
-   ```
-
-## Swagger UI Documentation
-
-The API includes interactive Swagger UI documentation. After starting the server:
-
-1. Open your browser and navigate to: `http://localhost:5000/apidocs`
-
-2. You'll see an interactive API documentation interface where you can:
-   - Browse all available endpoints
-   - See request/response schemas
-   - Test endpoints directly from the browser
-   - Authenticate using the "Authorize" button (enter your JWT token)
-
-3. To use the "Authorize" button:
-   - First, login via `/api/auth/login` to get your JWT token
-   - Click the "Authorize" button at the top of the Swagger UI
-   - Enter: `Bearer <your_jwt_token>` (replace `<your_jwt_token>` with your actual token)
-   - Now you can test protected endpoints directly from Swagger UI
-
-**Alternative**: You can also view the OpenAPI specification directly at `http://localhost:5000/apispec_1.json`
-
-## API Endpoints
+**Base URL**: `http://localhost:4000`
 
 ### Authentication
 
-- `POST /api/auth/register` - Register a new user
-  ```json
-  {
-    "username": "user123",
-    "password": "password123"
-  }
-  ```
+#### POST /api/auth/register
+```json
+{
+    "username": "john_doe",
+    "password": "SecurePassword123"
+}
+```
+**Response** (201): `{message, user}`
 
-- `POST /api/auth/login` - Login and get JWT token
-  ```json
-  {
-    "username": "user123",
-    "password": "password123"
-  }
-  ```
+#### POST /api/auth/login
+```json
+{
+    "username": "john_doe",
+    "password": "SecurePassword123"
+}
+```
+**Response** (200): `{access_token, user}`
+
+---
 
 ### Events
 
-- `GET /api/events` - Get all events
-- `GET /api/events/<id>` - Get a specific event
-- `POST /api/events` - Create a new event (requires authentication)
-  ```json
-  {
+#### GET /api/events
+**Response** (200): `[{event}, {event}, ...]`
+
+#### POST /api/events (requires auth)
+```json
+{
     "title": "Python Meetup",
-    "description": "Monthly Python developer meetup",
-    "date": "2026-01-15T18:00:00",
-    "location": "Tech Hub, Room 101",
+    "date": "2026-06-01",
+    "description": "...",
+    "location": "...",
     "capacity": 50,
     "is_public": true,
     "requires_admin": false
-  }
-  ```
+}
+```
+**Response** (201): `{event}`
+
+#### GET /api/events/{event_id}
+**Response** (200): `{event}` or (404): error
+
+---
 
 ### RSVPs
 
-- `POST /api/rsvps/event/<event_id>` - RSVP to an event
-  ```json
-  {
+#### POST /api/rsvps/event/{event_id}
+```json
+{
     "attending": true
-  }
-  ```
-
-- `GET /api/rsvps/event/<event_id>` - Get all RSVPs for an event
-
-## Authentication
-
-For protected endpoints, include the JWT token in the Authorization header:
-
+}
 ```
-Authorization: Bearer <your_jwt_token>
+**Response** (201/200): `{rsvp}`
+
+#### GET /api/rsvps/event/{event_id}
+**Response** (200): `{event, rsvps[], stats}`
+
+---
+
+## 🧪 Test Suite (13 Tests Total)
+
+### conftest.py - Test Configuration & Fixtures
+
+**Purpose**: Centralizes pytest configuration, shared fixtures, and utilities used across all test modules.
+
+#### Configuration Constants
+
+```python
+BASE_URL = "http://localhost:4000"
 ```
 
-## Security Notes
+- Defines the API server endpoint for all integration tests
+- Centralized configuration - easy to update if port changes
+- Used by all HTTP request operations
 
-This is a basic implementation designed for educational purposes. The following security considerations are intentionally simplified and can be improved in subsequent lessons:
+---
 
-- Password storage (currently using werkzeug, but can be improved)
-- JWT token handling
-- Input validation
-- SQL injection prevention (SQLAlchemy helps, but can be improved)
-- Rate limiting
-- CORS configuration
-- Error handling and information disclosure
+#### Fixture 1: `base_url` (Session Scope)
 
-## Database
+**Signature**: `@pytest.fixture(scope="session")`
 
-The application uses SQLite by default. The database file (`events.db`) will be created automatically on first run.
+**Purpose**: Provides the base URL for the running API server.
 
-**Note**: The first user registered automatically becomes an admin for demo purposes.
+**Returns**: `"http://localhost:4000"`
 
+**Scope**: Session-level (created once per test session)
+
+**Usage Example**:
+```python
+def test_health_endpoint(base_url):
+    response = requests.get(f"{base_url}/api/health")
+```
+
+**Why Session Scope?**:
+- ✅ URL doesn't change during test execution
+- ✅ Improves performance by creating once
+- ✅ Shared across all tests
+
+---
+
+#### Fixture 2: `unique_user_credentials` (Function Scope)
+
+**Signature**: `@pytest.fixture`
+
+**Purpose**: Generates guaranteed unique username credentials using millisecond-precision timestamps.
+
+**Returns**:
+```python
+{
+    "username": "user_1737283920123",  # timestamp in milliseconds
+    "password": "SecurePassword123"
+}
+```
+
+**Implementation Details**:
+```python
+@pytest.fixture
+def unique_user_credentials():
+    timestamp = int(time.time() * 1000)  # Milliseconds since epoch
+    return {
+        "username": f"user_{timestamp}",
+        "password": "SecurePassword123"
+    }
+```
+
+**Key Features**:
+- ✅ Timestamp in **milliseconds** ensures uniqueness
+- ✅ Function-scoped: New credentials for each test
+- ✅ Prevents database conflicts from duplicate usernames
+- ✅ Allows tests to run repeatedly without cleanup
+
+**Why Milliseconds?**:
+- Multiple tests can run in the same second
+- Millisecond precision prevents collisions
+- Example: `user_1737283920123` vs `user_1737283920456`
+
+**Usage Example**:
+```python
+def test_register_user(base_url, unique_user_credentials):
+    response = requests.post(
+        f"{base_url}/api/auth/register", 
+        json=unique_user_credentials
+    )
+    # username is unique every time this test runs
+```
+
+---
+
+#### Fixture 3: `authenticated_headers` (Function Scope)
+
+**Signature**: `@pytest.fixture`
+
+**Purpose**: Automatically registers a user, logs them in, and returns authorization headers containing a valid JWT token.
+
+**Dependencies**: 
+- `base_url` fixture
+- `unique_user_credentials` fixture
+
+**Returns**:
+```python
+{
+    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Implementation Flow**:
+```python
+@pytest.fixture
+def authenticated_headers(base_url, unique_user_credentials):
+    # Step 1: Register a new user
+    requests.post(
+        f"{base_url}/api/auth/register", 
+        json=unique_user_credentials
+    )
+    
+    # Step 2: Login with registered credentials
+    login_response = requests.post(
+        f"{base_url}/api/auth/login", 
+        json=unique_user_credentials
+    )
+    
+    # Step 3: Extract JWT token
+    token = login_response.json().get("access_token")
+    
+    # Step 4: Return formatted authorization header
+    return {"Authorization": f"Bearer {token}"}
+```
+
+**Why This Fixture Is Powerful**:
+- ✅ Eliminates boilerplate: Tests don't repeat registration/login
+- ✅ Automatic setup: Fresh authenticated user for each test
+- ✅ Clean syntax: Tests simply request `authenticated_headers`
+- ✅ Realistic: Mimics actual user authentication flow
+
+**Usage Example**:
+```python
+def test_create_event(base_url, authenticated_headers):
+    # Headers already contain valid JWT token
+    response = requests.post(
+        f"{base_url}/api/events",
+        json={"title": "My Event", "date": "2026-06-01"},
+        headers=authenticated_headers  # Authentication handled!
+    )
+```
+
+**Token Format**:
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczNzI4MzkyMCwianRpIjoiYWJjMTIzIiwibmJmIjoxNzM3MjgzOTIwLCJzdWIiOjEsInR5cGUiOiJhY2Nlc3MifQ.signature
+```
+- Prefix: `"Bearer "`
+- Token: JWT with header, payload, and signature
+- Valid until expiration (configurable in Flask app)
+
+**Fixture Scope Explanation**:
+- Function-scoped: Each test gets a fresh, unique authenticated user
+- No test can interfere with another's authentication state
+- Ensures test isolation and prevents cross-test contamination
+
+---
+
+### Test Execution Commands
+
+```bash
+# Run all tests
+pytest -v
+
+# Run specific test file
+pytest tests/test_models.py -v
+
+# Run specific test
+pytest tests/test_api.py::test_register_user_creates_new_user -v
+
+# Run tests matching pattern
+pytest -k "rsvp" -v
+
+# Run with coverage
+pytest --cov=. --cov-report=html
+
+# Run with detailed output
+pytest -v -s
+
+# Stop at first failure
+pytest -x
+```
+
+---
+
+### Unit Tests (test_models.py - 5 Tests)
+
+| # | Test | Purpose |
+|---|------|---------|
+| 1 | `test_user_password_hashing_behaves_correctly` | Password hashing/verification works |
+| 2 | `test_user_to_dict_conversion` | User serializes correctly to dict |
+| 3 | `test_event_to_dict_empty_rsvps` | Event handles zero RSVPs |
+| 4 | `test_event_to_dict_with_mocked_rsvps_calculates_counts` | RSVP counting and filtering works |
+| 5 | `test_rsvp_to_dict_conversion` | RSVP serializes correctly to dict |
+
+---
+
+### Integration Tests (test_api.py - 8 Tests)
+
+#### Happy Path (6 tests)
+
+| # | Test | Validates |
+|---|------|-----------|
+| 6 | `test_health_endpoint_returns_healthy` | Server running, health check works |
+| 7 | `test_register_user_creates_new_user` | User registration succeeds |
+| 8 | `test_login_returns_jwt_token` | Login returns valid JWT |
+| 9 | `test_create_public_event_requires_auth_and_succeeds_with_token` | Event creation with auth works |
+| 10 | `test_rsvp_to_public_event_succeeds_without_auth` | Public event RSVP without auth works |
+| 11 | `test_get_all_events_returns_list` | GET /api/events returns list |
+
+#### Error Handling (7 tests)
+
+| # | Test | Validates |
+|---|------|-----------|
+| 12 | `test_duplicate_username_registration_returns_400` | Duplicate username rejected |
+| 13 | `test_create_event_without_auth_returns_401` | Event creation requires auth |
+| 14 | `test_rsvp_to_non_public_event_without_auth_returns_error` | Protected event requires auth |
+| 15 | `test_get_invalid_event_id_returns_404` | Non-existent event returns 404 |
+| 16 | `test_create_event_with_missing_required_fields_returns_400` | Missing fields rejected |
+| 17 | `test_rsvp_to_non_existent_event_returns_404` | RSVP to invalid event returns 404 |
+
+---
+
+## 🎓 Designing New Tests
+
+### Template
+
+```python
+def test_[feature]_[condition]_[expected_outcome](fixtures):
+    """Clear description."""
+    
+    # SETUP
+    data = {...}
+    
+    # ACTION
+    response = requests.post(f"{base_url}/api/endpoint", json=data, headers=headers)
+    
+    # ASSERTION
+    assert response.status_code == expected_code
+    assert response.json().get("field") == expected_value
+```
+
+### Example: Event Capacity
+
+```python
+def test_rsvp_respects_event_capacity(base_url, authenticated_headers):
+    """Event capacity prevents overbooking."""
+    
+    # Create event with capacity=2
+    event = {"title": "Small", "date": "2026-06-01", "capacity": 2, "is_public": True}
+    event_res = requests.post(f"{base_url}/api/events", json=event, headers=authenticated_headers)
+    event_id = event_res.json()["id"]
+    
+    # RSVP 1 and 2 (succeed)
+    for i in range(2):
+        rsvp = requests.post(f"{base_url}/api/rsvps/event/{event_id}", json={})
+        assert rsvp.status_code in [200, 201]
+    
+    # RSVP 3 (fails)
+    rsvp3 = requests.post(f"{base_url}/api/rsvps/event/{event_id}", json={})
+    assert rsvp3.status_code == 400
+    assert "capacity" in rsvp3.json().get("error", "").lower()
+```
+
+### Example: Admin Access Control
+
+```python
+def test_admin_event_blocks_non_admin(base_url, authenticated_headers):
+    """Only admins can RSVP to admin events."""
+    
+    # Create admin event
+    event = {"title": "Admin", "date": "2026-06-01", "requires_admin": True, "is_public": False}
+    event_res = requests.post(f"{base_url}/api/events", json=event, headers=authenticated_headers)
+    event_id = event_res.json()["id"]
+    
+    # Create non-admin user
+    non_admin = {"username": f"user_{int(time.time() * 1000) + 1}", "password": "SecurePassword123"}
+    requests.post(f"{base_url}/api/auth/register", json=non_admin)
+    login = requests.post(f"{base_url}/api/auth/login", json=non_admin)
+    token = login.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+    
+    # Non-admin RSVP fails
+    rsvp = requests.post(f"{base_url}/api/rsvps/event/{event_id}", json={"attending": True}, headers=headers)
+    assert rsvp.status_code == 403
+    assert "admin" in rsvp.json().get("error", "").lower()
+```
+
+### Checklist
+
+For each endpoint, test:
+- [ ] Valid request succeeds
+- [ ] Missing required fields returns 400
+- [ ] Invalid data types returns 400
+- [ ] Protected endpoints return 401 without auth
+- [ ] Non-admin to admin endpoint returns 403
+- [ ] Non-existent resources return 404
+- [ ] Business logic enforced (capacity, uniqueness)
+- [ ] Correct response format
+- [ ] Correct HTTP status codes
+- [ ] Data persisted to database
+
+---
+
+## 🔐 Security
+
+### Current
+- ✅ Password hashing (werkzeug)
+- ✅ JWT authentication
+- ✅ Role-based access control
+- ✅ SQLAlchemy ORM (SQL injection prevention)
+
+### Recommendations
+- Upgrade to bcrypt/argon2
+- Add JWT refresh tokens
+- Input validation (marshmallow/pydantic)
+- Rate limiting (Flask-Limiter)
+- HTTPS in production
+- Better error handling
+- Logging & monitoring
+- .env file for secrets
+
+---
+
+## 📚 Documentation
+
+- **Swagger UI**: http://localhost:4000/apidocs
+- **OpenAPI Spec**: http://localhost:4000/api/openapi.yaml
+
+---
+
+**Made with ❤️ for learning web development**
