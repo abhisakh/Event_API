@@ -10,7 +10,7 @@ A Flask-based REST API for managing events and RSVPs with role-based access cont
 ## 📋 Quick Navigation
 
 - [Project Structure](#-project-structure)
-- [Docker Files Explanation](#Docker Setup & Usage Guide)
+- [Docker Files Explanation](#docker-file)
 - [Getting Started](#-getting-started)
 - [Database Models](#-database-models)
 - [API Reference](#-api-reference)
@@ -75,6 +75,7 @@ evently-api/
 | `tests/test_models.py` | Unit tests | 5 database model tests (password, serialization, counting) |
 | `tests/test_api.py` | Integration tests | 8 HTTP endpoint tests (happy paths + error cases) |
 
+<a id ="docker-file"></a>
 ### Docker Files Explanation
 
 #### Dockerfile
@@ -193,7 +194,6 @@ tests/                          # Test suite (13 tests)
 
 ---
 
-<a id ="Docker Setup & Usage Guide"></a>
 ## 🐳 Docker Setup & Usage Guide 
 
 ### 1. Local Setup and Build
