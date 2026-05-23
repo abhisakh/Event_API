@@ -1,12 +1,10 @@
-version: '3.8'
-
 services:
   api:
     build: .
-    image: events-api
+    image: abhisakh/events-api
     container_name: events-container
     ports:
-      - "4000:4000" # Maps your computer's port 4000 to the container's port 4000
+      - "4000:4000"
     environment:
       - FLASK_APP=app.py
       - FLASK_RUN_HOST=0.0.0.0
