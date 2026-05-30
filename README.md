@@ -10,7 +10,6 @@ A Flask-based REST API for managing events and RSVPs with role-based access cont
 ## 📋 Quick Navigation
 
 - [Project Structure](#-project-structure)
-- [Docker Files Explanation](#docker-file)
 - [Getting Started](#-getting-started)
 - [Database Models](#-database-models)
 - [API Reference](#-api-reference)
@@ -32,6 +31,10 @@ evently-api/
 ├── openapi.yaml                 # OpenAPI 3.0 specification
 ├── requirements.txt             # Python dependencies (Flask, SQLAlchemy, etc.)
 │
+├── .github/
+│   └── workflows/
+│       └── ci.yml               # GitHub Actions CI pipeline (Build, Test, Clean)
+│
 ├── instance/
 │   └── events.db                # SQLite database (auto-created on first run)
 │
@@ -41,11 +44,11 @@ evently-api/
 │   ├── events.py                # Event management (GET/POST /api/events, GET /api/events/{id})
 │   └── rsvps.py                 # RSVP management (POST/GET /api/rsvps/event/{id})
 │
-└── tests/                       # Automated test suite (13 tests total)
+└── tests/                       # Automated test suite (17 tests total)
     ├── __init__.py              # Package initializer (empty)
     ├── conftest.py              # Pytest configuration & shared fixtures
     ├── test_models.py           # Unit tests (5 tests) - Pure Python, no I/O
-    └── test_api.py              # Integration tests (8 tests) - HTTP E2E
+    └── test_api.py              # Integration tests (12 tests) - HTTP E2E
 ```
 
 ### Root Level Files
@@ -55,6 +58,7 @@ evently-api/
 | `README.md` | Project documentation | Comprehensive guide for setup, usage, and testing |
 | `Dockerfile` | Docker image blueprint | Defines how to build the application container |
 | `docker-compose.yml` | Container orchestration | Configures port mapping, volumes, and environment |
+| `.github/workflows/ci.yml` | CI/CD Pipeline | GitHub Actions workflow for automated testing and validation |
 | `app.py` | Flask application | Entry point for the API server |
 | `config.py` | Configuration settings | Database URI, JWT secrets, token expiration |
 | `models.py` | Database models | User, Event, RSVP SQLAlchemy classes |
@@ -73,9 +77,9 @@ evently-api/
 | `routes/rsvps.py` | RSVP system | `/rsvps/event/{id}` (POST, GET) with access control |
 | `tests/conftest.py` | Test fixtures | `base_url`, `unique_user_credentials`, `authenticated_headers` |
 | `tests/test_models.py` | Unit tests | 5 database model tests (password, serialization, counting) |
-| `tests/test_api.py` | Integration tests | 8 HTTP endpoint tests (happy paths + error cases) |
+| `tests/test_api.py` | Integration tests | 12 HTTP endpoint tests (happy paths + error cases) |
+| `.github/workflows/ci.yml` | CI/CD automation | Build image, run tests, health checks, cleanup
 
-<a id ="docker-file"></a>
 ### Docker Files Explanation
 
 #### Dockerfile
@@ -133,68 +137,72 @@ services:
 
 ### Directory Structure Details
 
-```
-instance/
-└── events.db                    # SQLite database file
-                                 # Auto-created by Flask-SQLAlchemy
-                                 # Contains: user, event, rsvp tables
-                                 # Remove to reset database
+#### `.github/` Directory - CI/CD Workflows
 
-routes/                          # API route blueprints
-├── __init__.py                 # Empty - marks as Python package
-├── auth.py                     # Handles /api/auth/* endpoints
-                                # - User registration
-                                # - User login with JWT generation
-                                # - Password hashing/verification
-│
-├── events.py                   # Handles /api/events/* endpoints
-                                # - List all events (GET /api/events)
-                                # - Create event (POST /api/events) - requires auth
-                                # - Get event by ID (GET /api/events/{id})
-                                # - Date parsing & validation
-│
-└── rsvps.py                    # Handles /api/rsvps/* endpoints
-                                # - Create/update RSVP (POST /api/rsvps/event/{id})
-                                # - Get event RSVPs (GET /api/rsvps/event/{id})
-                                # - Access control (public/protected/admin events)
-                                # - Capacity checking
-
-tests/                          # Test suite (13 tests)
-├── __init__.py                 # Empty - marks as Python package
-├── conftest.py                 # Shared pytest configuration
-                                # - Fixtures for all tests
-                                # - Base URL configuration (http://localhost:4000)
-                                # - Unique user generation (timestamp-based)
-                                # - JWT token creation
-│
-├── test_models.py              # Unit tests (5 tests)
-                                # - test_user_password_hashing_behaves_correctly
-                                # - test_user_to_dict_conversion
-                                # - test_event_to_dict_empty_rsvps
-                                # - test_event_to_dict_with_mocked_rsvps_calculates_counts
-                                # - test_rsvp_to_dict_conversion
-│
-└── test_api.py                 # Integration tests (8 tests)
-                                # Happy Path Tests (6):
-                                # - test_health_endpoint_returns_healthy
-                                # - test_register_user_creates_new_user
-                                # - test_login_returns_jwt_token
-                                # - test_create_public_event_requires_auth_and_succeeds_with_token
-                                # - test_rsvp_to_public_event_succeeds_without_auth
-                                # - test_get_all_events_returns_list
-                                #
-                                # Error Handling Tests (7):
-                                # - test_duplicate_username_registration_returns_400
-                                # - test_create_event_without_auth_returns_401
-                                # - test_rsvp_to_non_public_event_without_auth_returns_error
-                                # - test_get_invalid_event_id_returns_404
-                                # - test_create_event_with_missing_required_fields_returns_400
-                                # - test_rsvp_to_non_existent_event_returns_404
 ```
+.github/
+└── workflows/
+    └── ci.yml
+```
+
+| File | Purpose |
+|------|---------|
+| `ci.yml` | GitHub Actions CI pipeline - Triggers on push/PR to main, builds Docker image, runs all 17 tests, cleans up container |
 
 ---
 
-## 🐳 Docker Setup & Usage Guide 
+#### `instance/` Directory - Application Data
+
+```
+instance/
+└── events.db
+```
+
+| File | Purpose |
+|------|---------|
+| `events.db` | SQLite database file (auto-created by Flask-SQLAlchemy on first run) - Contains user, event, rsvp tables |
+
+---
+
+#### `routes/` Directory - API Endpoints
+
+```
+routes/
+├── __init__.py
+├── auth.py
+├── events.py
+└── rsvps.py
+```
+
+| File | Purpose |
+|------|---------|
+| `__init__.py` | Package initializer (empty file marking this directory as a Python package) |
+| `auth.py` | Authentication blueprint - POST /api/auth/register (user creation), POST /api/auth/login (JWT generation) |
+| `events.py` | Event management blueprint - GET /api/events (list), POST /api/events (create), GET /api/events/{id} (get single) |
+| `rsvps.py` | RSVP system blueprint - POST /api/rsvps/event/{id} (RSVP), GET /api/rsvps/event/{id} (view RSVPs with stats) |
+
+---
+
+#### `tests/` Directory - Test Suite
+
+```
+tests/
+├── __init__.py
+├── conftest.py
+├── test_models.py
+└── test_api.py
+```
+
+| File | Purpose |
+|------|---------|
+| `__init__.py` | Package initializer (empty file marking this directory as a Python package) |
+| `conftest.py` | Pytest configuration and shared fixtures (base_url, unique_user_credentials, authenticated_headers) |
+| `test_models.py` | Unit tests (5 tests) - Tests User, Event, RSVP model serialization and password hashing |
+| `test_api.py` | Integration tests (12 tests) - Tests all API endpoints with running Flask server on localhost:4000 |
+
+---
+
+## 🐳 Docker Setup & Usage Guide
 
 ### 1. Local Setup and Build
 
@@ -304,31 +312,18 @@ The `Dockerfile` is the blueprint for your application environment. It ensures t
 
 **Typical Dockerfile Structure:**
 ```dockerfile
-# Use an official lightweight Python base image
-FROM python:3.11-slim
+FROM python:3.9-slim
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy requirements first to leverage Docker's caching mechanism
 COPY requirements.txt .
+RUN pip install -r requirements.txt
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy the rest of the application code
 COPY . .
 
-# Expose the API port (as specified in README tech stack at my GitHub)
 EXPOSE 4000
 
-# Set environment variables to force Flask to bind to all network interfaces
-ENV FLASK_APP=app.py
-ENV FLASK_RUN_HOST=0.0.0.0
-ENV FLASK_RUN_PORT=4000
-
-# Run the Flask server
-CMD ["flask", "run"]
+CMD ["python", "app.py"]
 ```
 
 ---
@@ -344,17 +339,19 @@ This file acts as the control panel for your container. It defines how the image
 
 **Typical docker-compose.yml Structure:**
 ```yaml
+version: '3.8'
+
 services:
   api:
     build: .
-    image: abhisakh/events-api
-    container_name: events-container
     ports:
       - "4000:4000"
     environment:
       - FLASK_APP=app.py
-      - FLASK_RUN_HOST=0.0.0.0
       - FLASK_RUN_PORT=4000
+    volumes:
+      - .:/app
+    command: python app.py
 ```
 
 ---
@@ -441,6 +438,343 @@ docker ps
 ```bash
 docker inspect events-container
 ```
+
+---
+
+## ⚙️ CI/CD Pipeline - GitHub Actions Workflow
+
+### Overview
+
+The **GitHub Actions CI pipeline** (`ci.yml`) automatically builds, tests, and validates your application every time code is pushed to the `main` branch or a pull request is created.
+
+**Workflow File Location**: `.github/workflows/ci.yml`
+
+**Trigger Events**:
+- ✅ Push to `main` branch
+- ✅ Pull requests targeting `main` branch
+
+---
+
+### Pipeline Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     GitHub Actions CI Pipeline                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  1️⃣  CHECKOUT                                                          │
+│  └─► actions/checkout@v4                                              │
+│      (Clone repository code)                                           │
+│           │                                                             │
+│           ▼                                                             │
+│  2️⃣  DOCKER BUILD                                                      │
+│  ├─► Set up Docker Buildx                                             │
+│  ├─► Build Docker Image (cache optimization)                          │
+│  │   └─► events-api:latest                                            │
+│  └─► Run Containerized API (Port 4000)                                │
+│           │                                                             │
+│           ▼                                                             │
+│  3️⃣  HEALTH CHECK                                                      │
+│  ├─► Wait for API startup (3 seconds)                                 │
+│  └─► curl http://localhost:4000/api/health ✅                         │
+│           │                                                             │
+│           ▼                                                             │
+│  4️⃣  TEST SUITE                                                        │
+│  ├─► Set up Python 3.9                                                │
+│  ├─► Install dependencies (pip install -r requirements.txt)           │
+│  └─► Run pytest -v (5 unit + 12 integration tests)                    │
+│           │                                                             │
+│           ▼                                                             │
+│  5️⃣  CLEANUP                                                           │
+│  └─► Stop & remove Docker container                                   │
+│      (Always runs, even if tests fail)                                 │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Pipeline Stages Explained
+
+#### **Stage 1: Checkout Code**
+
+```yaml
+- name: Checkout Code
+  uses: actions/checkout@v4
+```
+
+**Purpose**: Clone the repository code into the CI runner environment
+
+**What Happens**:
+- GitHub fetches the latest code from the branch
+- All files are available for building and testing
+- Code is ready for Docker image build
+
+---
+
+#### **Stage 2: Docker Build & Setup**
+
+```yaml
+- name: Set up Docker Buildx
+  uses: docker/setup-buildx-action@v3
+
+- name: Build Docker Image
+  uses: docker/build-push-action@v5
+  with:
+    context: .
+    file: ./Dockerfile
+    load: true
+    tags: events-api:latest
+    cache-from: type=gha
+    cache-to: type=gha,mode=max
+```
+
+**Purpose**: Build the Docker image with intelligent caching
+
+**What Happens**:
+- ✅ Sets up Docker Buildx (advanced build capabilities)
+- ✅ Reads `Dockerfile` from root directory
+- ✅ Builds image with tag `events-api:latest`
+- ✅ **Cache optimization**: Uses GitHub Actions cache (`gha`) for faster builds
+- ✅ `load: true` loads image into local Docker daemon for testing
+
+**Why Cache Matters**:
+- Subsequent builds are 60-80% faster
+- Avoids re-downloading dependencies
+- Layers are cached (base image, pip installs, etc.)
+
+---
+
+#### **Stage 3: Run Containerized API**
+
+```yaml
+- name: Run Containerized API
+  run: |
+    docker run -d \
+      -p 4000:4000 \
+      --name events-container \
+      events-api:latest
+
+- name: Wait for API and Check Health
+  run: |
+    echo "Waiting for API to start..."
+    sleep 3
+    curl --fail --verbose http://localhost:4000/api/health
+```
+
+**Purpose**: Start the API container and verify it's healthy
+
+**What Happens**:
+- ✅ Runs container in detached mode (`-d`)
+- ✅ Maps port 4000 (container) → 4000 (CI environment)
+- ✅ Names container `events-container` for easy reference
+- ✅ Waits 3 seconds for Flask to initialize
+- ✅ Makes HTTP request to `/api/health` endpoint
+- ✅ Fails pipeline if health check returns non-200 status
+
+**Health Check Response**:
+```json
+{
+    "status": "healthy"
+}
+```
+
+---
+
+#### **Stage 4: Install Dependencies & Run Tests**
+
+```yaml
+- name: Set up Python
+  uses: actions/setup-python@v5
+  with:
+    python-version: '3.9'
+    cache: 'pip'
+
+- name: Install Dependencies
+  run: |
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+
+- name: Run Test Suite
+  run: |
+    pytest -v
+```
+
+**Purpose**: Run the complete test suite against the running container
+
+**What Happens**:
+- ✅ Installs Python 3.9 (matches project requirements)
+- ✅ Caches pip packages for faster runs
+- ✅ Installs all dependencies from `requirements.txt`
+- ✅ Runs pytest with verbose output (`-v`)
+- ✅ Executes all 17 tests:
+  - 5 unit tests (test_models.py)
+  - 12 integration tests (test_api.py)
+
+**Test Configuration**:
+- Tests connect to running container on `http://localhost:4000`
+- Base URL from `conftest.py`: `BASE_URL = "http://localhost:4000"`
+- Fixtures auto-setup users and JWT tokens
+
+**Test Results**:
+```
+test_health_endpoint_returns_healthy PASSED
+test_register_user_creates_new_user PASSED
+test_login_returns_jwt_token PASSED
+test_create_public_event_requires_auth_and_succeeds_with_token PASSED
+test_rsvp_to_public_event_succeeds_without_auth PASSED
+test_get_all_events_returns_list PASSED
+test_duplicate_username_registration_returns_400 PASSED
+test_create_event_without_auth_returns_401 PASSED
+test_rsvp_to_non_public_event_without_auth_returns_error PASSED
+test_get_invalid_event_id_returns_404 PASSED
+test_create_event_with_missing_required_fields_returns_400 PASSED
+test_rsvp_to_non_existent_event_returns_404 PASSED
+test_user_password_hashing_behaves_correctly PASSED
+test_user_to_dict_conversion PASSED
+test_event_to_dict_empty_rsvps PASSED
+test_event_to_dict_with_mocked_rsvps_calculates_counts PASSED
+test_rsvp_to_dict_conversion PASSED
+
+======================== 17 passed in 4.23s ========================
+```
+
+---
+
+#### **Stage 5: Cleanup**
+
+```yaml
+- name: Clean up Container
+  if: always()
+  runs: |
+    if [ "$(docker ps -aq -f name=events-container)" ]; then
+      echo "Stopping and removing container..."
+      docker stop events-container
+      docker rm events-container
+    else
+      echo "No container found to clean up."
+    fi
+```
+
+**Purpose**: Remove container after tests complete (even if tests fail)
+
+**What Happens**:
+- ✅ Runs regardless of previous step success/failure (`if: always()`)
+- ✅ Checks if `events-container` exists
+- ✅ Stops the running container
+- ✅ Removes the container completely
+- ✅ Frees up resources on CI runner
+
+**Why This Matters**:
+- Prevents container accumulation
+- Ensures clean environment for next run
+- Avoids port conflicts (4000 still available)
+
+---
+
+### GitHub Actions Workflow Details
+
+#### File: `.github/workflows/ci.yml`
+
+**Workflow Name**: "From Dev to Prod 4 – CI with GitHub Actions"
+
+**Runs On**: `ubuntu-latest` (latest Ubuntu runner)
+
+**Jobs**:
+- Single job: `test` (Build, Test, and Clean)
+
+**Trigger Conditions**:
+```yaml
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+```
+
+Runs when:
+- ✅ Code pushed to `main` branch
+- ✅ Pull request created targeting `main`
+- ✅ Pull request updated with new commits
+
+---
+
+### Pipeline Execution Timeline
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                    Typical Pipeline Run                            │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│ Checkout Code                    ████                  ~2s        │
+│ Set up Docker Buildx             ███                   ~1s        │
+│ Build Docker Image               ██████████████        ~15s       │
+│ Run Containerized API            ████                  ~2s        │
+│ Wait & Health Check              ███                   ~3s        │
+│ Set up Python                    ██████                ~6s        │
+│ Install Dependencies             █████████             ~10s       │
+│ Run Test Suite                   ██████████████████    ~20s       │
+│ Clean up Container               ██                    ~1s        │
+│                                                                    │
+│                    Total: ~60 seconds                              │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Monitoring Pipeline Runs
+
+#### View Pipeline Status on GitHub
+
+1. **Go to Repository** → `Actions` tab
+2. **Select Workflow**: "From Dev to Prod 4 – CI with GitHub Actions"
+3. **View Recent Runs**: Shows status (✅ Passed / ❌ Failed)
+4. **Click Run**: See detailed logs for each stage
+
+#### Pipeline Status Badge
+
+Add to your README:
+```markdown
+[![CI Pipeline](https://github.com/YOUR_USERNAME/evently-api/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/evently-api/actions)
+```
+
+---
+
+### CI Pipeline Best Practices
+
+| Best Practice | Implementation |
+|---------------|-----------------|
+| **Cache Dependencies** | `cache: 'pip'` in setup-python |
+| **Docker Layer Caching** | `cache-from: type=gha, cache-to: type=gha,mode=max` |
+| **Health Checks** | `curl http://localhost:4000/api/health` |
+| **Always Cleanup** | `if: always()` ensures cleanup even on failure |
+| **Fail Fast** | `--fail` flag on curl makes pipeline fail on health check failure |
+| **Verbose Output** | `pytest -v` shows each test result |
+| **Version Pinning** | Actions use pinned versions (`@v4`, `@v5`) |
+
+---
+
+### Troubleshooting CI Failures
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `Connection refused on localhost:4000` | API didn't start | Check Docker logs: `docker logs events-container` |
+| `pytest: command not found` | Requirements not installed | Verify `requirements.txt` includes pytest |
+| `Port 4000 already in use` | Previous container not cleaned | Manually run `docker stop events-container && docker rm events-container` |
+| `curl: (28) operation timeout` | API startup too slow | Increase sleep time from 3 to 5 seconds |
+| `Cache miss on Docker layers` | First build or cache cleared | Second run will be faster with caching |
+
+---
+
+### Next Steps: From CI to CD
+
+This CI pipeline validates your code. To extend to **Continuous Deployment**:
+
+1. **Build Docker Image** ✅ (Already in pipeline)
+2. **Run Tests** ✅ (Already in pipeline)
+3. **Push to Docker Hub** (Add `docker/build-push-action` with push enabled)
+4. **Deploy to Production** (Add Kubernetes or cloud deployment step)
 
 ---
 
@@ -552,7 +886,7 @@ return {
 ```python
 def test_register_user(base_url, unique_user_credentials):
     response = requests.post(
-        f"{base_url}/api/auth/register", 
+        f"{base_url}/api/auth/register",
         json=unique_user_credentials
     )
     # username is unique every time this test runs
@@ -566,7 +900,7 @@ def test_register_user(base_url, unique_user_credentials):
 
 **Purpose**: Automatically registers a user, logs them in, and returns authorization headers containing a valid JWT token.
 
-**Dependencies**: 
+**Dependencies**:
 - `base_url` fixture
 - `unique_user_credentials` fixture
 
@@ -582,19 +916,19 @@ def test_register_user(base_url, unique_user_credentials):
 def authenticated_headers(base_url, unique_user_credentials):
     # Step 1: Register a new user
     requests.post(
-        f"{base_url}/api/auth/register", 
+        f"{base_url}/api/auth/register",
         json=unique_user_credentials
     )
-    
+
     # Step 2: Login with registered credentials
     login_response = requests.post(
-        f"{base_url}/api/auth/login", 
+        f"{base_url}/api/auth/login",
         json=unique_user_credentials
     )
-    
+
     # Step 3: Extract JWT token
     token = login_response.json().get("access_token")
-    
+
     # Step 4: Return formatted authorization header
     return {"Authorization": f"Bearer {token}"}
 ```
@@ -665,12 +999,12 @@ def test_user_password_hashing_behaves_correctly():
     user = User()
     user.username = "test_user"
     user.set_password("SecureSecretPass123!")
-    
+
     # Raw password text is never exposed explicitly
     assert user.password_hash != "SecureSecretPass123!"
-    
+
     assert user.check_password("SecureSecretPass123!") is True
-    
+
     # Assert wrong password verification correctly fails
     assert user.check_password("WrongPassword123") is False
 ```
@@ -997,7 +1331,7 @@ def test_rsvp_to_dict_conversion():
 
 **Philosophy**: End-to-end integration tests that validate complete HTTP request/response cycles. Send real HTTP requests to a **running Flask server** on `http://localhost:4000`.
 
-**Prerequisites**: 
+**Prerequisites**:
 - ⚠️ **CRITICAL**: Flask server MUST be running on `localhost:4000`
 - Tests will fail if server is not accessible
 
@@ -1814,16 +2148,16 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
-    
+
     rsvps = db.relationship('RSVP', backref='user', lazy=True)
     events = db.relationship('Event', backref='creator', lazy=True)
-    
+
     def set_password(password):
         # Hash plaintext password using werkzeug
-        
+
     def check_password(password) -> bool:
         # Verify password against hash
-        
+
     def to_dict() -> dict:
         # Returns: {id, username, is_admin, created_at}
         # Excludes: password_hash (security)
@@ -1851,9 +2185,9 @@ class Event(db.Model):
     requires_admin = db.Column(db.Boolean, default=False, nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
-    
+
     rsvps = db.relationship('RSVP', backref='event', lazy=True, cascade='all, delete-orphan')
-    
+
     def to_dict() -> dict:
         # Returns: {all fields above, rsvp_count, attendees}
         # rsvp_count = total RSVPs
@@ -1878,7 +2212,7 @@ class RSVP(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     attending = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
-    
+
     def to_dict() -> dict:
         # Returns: {id, event_id, user_id, attending, created_at}
 ```
@@ -2037,7 +2371,7 @@ def unique_user_credentials():
 ```python
 def test_register_user(base_url, unique_user_credentials):
     response = requests.post(
-        f"{base_url}/api/auth/register", 
+        f"{base_url}/api/auth/register",
         json=unique_user_credentials
     )
     # username is unique every time this test runs
@@ -2051,7 +2385,7 @@ def test_register_user(base_url, unique_user_credentials):
 
 **Purpose**: Automatically registers a user, logs them in, and returns authorization headers containing a valid JWT token.
 
-**Dependencies**: 
+**Dependencies**:
 - `base_url` fixture
 - `unique_user_credentials` fixture
 
@@ -2068,19 +2402,19 @@ def test_register_user(base_url, unique_user_credentials):
 def authenticated_headers(base_url, unique_user_credentials):
     # Step 1: Register a new user
     requests.post(
-        f"{base_url}/api/auth/register", 
+        f"{base_url}/api/auth/register",
         json=unique_user_credentials
     )
-    
+
     # Step 2: Login with registered credentials
     login_response = requests.post(
-        f"{base_url}/api/auth/login", 
+        f"{base_url}/api/auth/login",
         json=unique_user_credentials
     )
-    
+
     # Step 3: Extract JWT token
     token = login_response.json().get("access_token")
-    
+
     # Step 4: Return formatted authorization header
     return {"Authorization": f"Bearer {token}"}
 ```
@@ -2189,13 +2523,13 @@ pytest -x
 ```python
 def test_[feature]_[condition]_[expected_outcome](fixtures):
     """Clear description."""
-    
+
     # SETUP
     data = {...}
-    
+
     # ACTION
     response = requests.post(f"{base_url}/api/endpoint", json=data, headers=headers)
-    
+
     # ASSERTION
     assert response.status_code == expected_code
     assert response.json().get("field") == expected_value
@@ -2206,17 +2540,17 @@ def test_[feature]_[condition]_[expected_outcome](fixtures):
 ```python
 def test_rsvp_respects_event_capacity(base_url, authenticated_headers):
     """Event capacity prevents overbooking."""
-    
+
     # Create event with capacity=2
     event = {"title": "Small", "date": "2026-06-01", "capacity": 2, "is_public": True}
     event_res = requests.post(f"{base_url}/api/events", json=event, headers=authenticated_headers)
     event_id = event_res.json()["id"]
-    
+
     # RSVP 1 and 2 (succeed)
     for i in range(2):
         rsvp = requests.post(f"{base_url}/api/rsvps/event/{event_id}", json={})
         assert rsvp.status_code in [200, 201]
-    
+
     # RSVP 3 (fails)
     rsvp3 = requests.post(f"{base_url}/api/rsvps/event/{event_id}", json={})
     assert rsvp3.status_code == 400
@@ -2228,19 +2562,19 @@ def test_rsvp_respects_event_capacity(base_url, authenticated_headers):
 ```python
 def test_admin_event_blocks_non_admin(base_url, authenticated_headers):
     """Only admins can RSVP to admin events."""
-    
+
     # Create admin event
     event = {"title": "Admin", "date": "2026-06-01", "requires_admin": True, "is_public": False}
     event_res = requests.post(f"{base_url}/api/events", json=event, headers=authenticated_headers)
     event_id = event_res.json()["id"]
-    
+
     # Create non-admin user
     non_admin = {"username": f"user_{int(time.time() * 1000) + 1}", "password": "SecurePassword123"}
     requests.post(f"{base_url}/api/auth/register", json=non_admin)
     login = requests.post(f"{base_url}/api/auth/login", json=non_admin)
     token = login.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
-    
+
     # Non-admin RSVP fails
     rsvp = requests.post(f"{base_url}/api/rsvps/event/{event_id}", json={"attending": True}, headers=headers)
     assert rsvp.status_code == 403
