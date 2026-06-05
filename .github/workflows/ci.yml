@@ -1,4 +1,4 @@
-name: From Dev to Prod 4 – CI with GitHub Actions
+name: From Dev to Prod 5 – Deploying the Events API
 
 on:
   push:
@@ -7,20 +7,17 @@ on:
     branches: [ main ]
 
 jobs:
+  # =========================================================
+  # CI JOB: RUNS TESTS LOCALLY IN CONTAINER (Step 1, 2, 3, 4)
+  # =========================================================
   test:
     name: Build, Test, and Clean
     runs-on: ubuntu-latest
 
     steps:
-      # =========================================================
-      # 1. Create the Workflow Skeleton
-      # =========================================================
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # =========================================================
-      # 2. Build and Run the Docker Image in CI
-      # =========================================================
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -30,17 +27,17 @@ jobs:
           context: .
           file: ./Dockerfile
           load: true
-          tags: events-api:latest
+          platforms: linux/amd64
+          tags: abhisakh/events-api:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Run Containerized API
-        # Port 4000 is mapped here based on the project documentation configurations
         run: |
           docker run -d \
             -p 4000:4000 \
             --name events-container \
-            events-api:latest
+            abhisakh/events-api:latest
 
       - name: Wait for API and Check Health
         run: |
@@ -48,9 +45,6 @@ jobs:
           sleep 3
           curl --fail --verbose http://localhost:4000/api/health
 
-      # =========================================================
-      # 3. Install Dependencies and Run Tests in CI
-      # =========================================================
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -63,13 +57,9 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run Test Suite
-        # Executes pytest against the running container on port 4000
         run: |
           pytest -v
 
-      # =========================================================
-      # 4. Clean Up the Container in CI
-      # =========================================================
       - name: Clean up Container
         if: always()
         run: |
@@ -80,3 +70,52 @@ jobs:
           else
             echo "No container found to clean up."
           fi
+
+  # =========================================================
+  # CD JOB: PUBLISHES TO DOCKER HUB & TRIGGERS RENDER (Step 5 & 6)
+  # =========================================================
+  deploy:
+    name: Publish, Deploy, and Smoke Test
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Production Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: |
+            abhisakh/events-api:latest
+            abhisakh/events-api:${{ github.sha }}
+            abhisakh/events-api:${{ github.ref_name }}
+
+      - name: Trigger Render Deployment
+        run: |
+          echo "Triggering deployment via Render Webhook..."
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+
+      - name: Wait for Render Rollout
+        run: |
+          echo "Waiting 60 seconds for Render to deploy the new image..."
+          sleep 60
+
+      - name: Automated Smoke Test Against Live Render API
+        run: |
+          echo "Running smoke test against live production deployment..."
+          curl --fail --verbose "${{ secrets.RENDER_BASE_URL }}/api/health"
