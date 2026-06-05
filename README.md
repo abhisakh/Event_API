@@ -7,14 +7,359 @@ A Flask-based REST API for managing events and RSVPs with role-based access cont
 [![Tests](https://img.shields.io/badge/Tests-13%20Passing-brightgreen.svg)](https://docs.pytest.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## 📋 Quick Navigation
+---
 
-- [Project Structure](#-project-structure)
-- [Getting Started](#-getting-started)
-- [Database Models](#-database-models)
-- [API Reference](#-api-reference)
-- [Test Suite](#-test-suite)
-- [Designing New Tests](#-designing-new-tests)
+## 🚀 Live Resources & Production Links
+
+### ✨ Your Live Application
+
+| Resource | Link | Status |
+|----------|------|--------|
+| 🌐 **Production API** | [events-api-latest-rsgk.onrender.com](https://events-api-latest-rsgk.onrender.com) | ✅ Live on Render |
+| 🐳 **Docker Image Repository** | [hub.docker.com/r/abhisakh/events-api](https://hub.docker.com/r/abhisakh/events-api) | ✅ Hosted on Docker Hub |
+| 💻 **GitHub Repository** | [github.com/abhisakh/events-api](https://github.com/abhisakh/events-api) | ✅ Source Code & CI/CD |
+
+### Quick Links to Test Your API
+
+#### Command Line Testing
+```bash
+# Health Check (Verify API is running)
+curl https://events-api-latest-rsgk.onrender.com/api/health
+
+# Get All Events
+curl https://events-api-latest-rsgk.onrender.com/api/events
+
+# View OpenAPI Specification (JSON format)
+https://events-api-latest-rsgk.onrender.com/api/openapi.yaml
+```
+
+#### 🎯 Interactive Testing with Swagger UI
+
+**Access Swagger UI in Production:**
+```
+👉 https://events-api-latest-rsgk.onrender.com/apidocs
+```
+
+**Steps to Test API Endpoints:**
+
+1. **Open the URL above** in your browser
+   - You'll see the Swagger UI interface with all available endpoints
+   - All 17 endpoints documented and testable
+
+2. **Select the Production Server** ⚠️ **IMPORTANT!**
+   - Look for the **"Servers"** dropdown in the top-right of Swagger UI
+   - You'll see two options:
+     ```yaml
+     • http://localhost:4000
+     • https://events-api-latest-rsgk.onrender.com  ← SELECT THIS ONE
+     ```
+   - **Click and select**: `https://events-api-latest-rsgk.onrender.com`
+   - This routes all your test requests to the live production API
+
+3. **Start Testing Endpoints**
+   - Click any endpoint to expand it
+   - Click "Try it out" button
+   - Fill in parameters (if needed)
+   - Click "Execute" to make the request
+   - See response in real-time
+
+**Example Test Flow:**
+```
+1. Open https://events-api-latest-rsgk.onrender.com/apidocs
+2. Select Server: "https://events-api-latest-rsgk.onrender.com"
+3. Click "GET /api/events"
+4. Click "Try it out"
+5. Click "Execute"
+6. See all events in production! ✅
+```
+
+**Available Test Endpoints:**
+
+| Endpoint | Method | Purpose | Auth Required |
+|----------|--------|---------|---|
+| `/api/health` | GET | Check API health | No |
+| `/api/events` | GET | List all events | No |
+| `/api/events/{id}` | GET | Get event details | No |
+| `/api/auth/register` | POST | Register new user | No |
+| `/api/auth/login` | POST | Login & get JWT token | No |
+| `/api/events` | POST | Create new event | **Yes** |
+| `/api/rsvps/event/{id}` | POST | RSVP to event | Depends on event |
+| `/api/rsvps/event/{id}` | GET | View RSVPs for event | No |
+
+**Quick Test Suggestions:**
+1. ✅ Test health check first (GET /api/health)
+2. ✅ List all events (GET /api/events)
+3. ✅ Register a new user (POST /api/auth/register)
+4. ✅ Login with your credentials (POST /api/auth/login)
+5. ✅ Create a new event (POST /api/events) - Use JWT token from step 4
+6. ✅ RSVP to an event (POST /api/rsvps/event/{id})
+7. ✅ View RSVPs (GET /api/rsvps/event/{id})
+
+---
+
+### Production Dashboard Links
+
+| Tool | Purpose | Access |
+|------|---------|--------|
+| 🔷 **Render Dashboard** | Monitor deployment, view logs, manage service | [dashboard.render.com](https://dashboard.render.com) → events-api-latest-rsgk |
+| 🐳 **Docker Hub Dashboard** | View image tags, pull instructions, image stats | [hub.docker.com/r/abhisakh/events-api](https://hub.docker.com/r/abhisakh/events-api) |
+| 🔄 **GitHub Actions Pipeline** | Monitor CI/CD pipeline, view workflow runs | [github.com/abhisakh/events-api/actions](https://github.com/abhisakh/events-api/actions) |
+| 📝 **GitHub Repository** | Source code, issues, commits, branches | [github.com/abhisakh/events-api](https://github.com/abhisakh/events-api) |
+
+---
+
+## 📋 Comprehensive Table of Contents
+
+### 🚀 Quick Start & Production Links
+- [Live Resources & Production Links](#-live-resources--production-links)
+  - Your Live Application (Render, Docker Hub, GitHub)
+  - Quick Links to Test Your API (Swagger UI, curl commands)
+  - Production Dashboard Links
+
+---
+
+### 📁 Project Structure & Files
+
+**1. [Project Structure](#-project-structure)**
+   - Complete directory tree with file descriptions
+   - Root level files (Dockerfile, docker-compose.yml, app.py, etc.)
+   - File Responsibilities table (10 files documented)
+
+**2. [File Descriptions & Responsibilities](#file-responsibilities)**
+   - App.py - Flask application factory
+   - Config.py - Configuration settings
+   - Models.py - SQLAlchemy models (User, Event, RSVP)
+   - Routes (auth.py, events.py, rsvps.py)
+   - Tests (conftest.py, test_models.py, test_api.py)
+   - GitHub Workflows (ci.yml)
+
+**3. [Docker Architecture Compatibility](#-docker-architecture-compatibility)**
+   - Platform specification (linux/amd64)
+   - Mac vs Linux compatibility
+   - Render hosting requirements
+   - Architecture verification commands
+   - Common issues & solutions
+
+---
+
+### 🚀 Development Setup & Local Deployment
+
+**4. [Getting Started](#-getting-started)**
+   - Installation instructions
+   - Virtual environment setup
+   - Database initialization
+   - Running the application locally
+   - Accessing local API & Swagger UI
+
+**5. [Docker Setup & Usage Guide](#-docker-setup--usage-guide)**
+   - 1. Local Setup and Build (docker compose up)
+   - 2. Pushing to Docker Hub (docker push)
+   - 3. Pulling and Running from Registry
+   - 4. Testing the Docker Container
+   - 5. Management Tips (stop, cleanup, inspect)
+
+**6. [Docker Configuration](#️-docker-configuration)**
+   - Dockerfile details (Python 3.11-slim, ports, environment)
+   - docker-compose.yml configuration
+   - Platform specification explanation
+   - Service setup and environment variables
+
+**7. [Local Development](#local-development)**
+   - Building and running locally
+   - Accessing the API
+   - Running tests with container running
+
+---
+
+### 💾 Database & Application Details
+
+**8. [Database Models](#-database-models)**
+   - User Model (authentication, admin roles)
+   - Event Model (event management, RSVP relationships)
+   - RSVP Model (attendance tracking)
+   - Access Control Matrix (public/protected/admin)
+   - Model relationships & cascade deletes
+
+**9. [API Reference](#-api-reference)**
+   - Auth Routes (/api/auth/register, /api/auth/login)
+   - Event Routes (GET/POST /api/events, GET /api/events/{id})
+   - RSVP Routes (POST/GET /api/rsvps/event/{id})
+   - App Routes (/health, /apidocs, /api/openapi.yaml)
+   - Error codes and status codes
+
+**10. [OpenAPI Specification](#openapi-specification)**
+   - Server configuration (local & production)
+   - API documentation format
+   - Schema definitions
+   - Security schemes (JWT)
+
+---
+
+### 🧪 Testing (17 Complete Tests)
+
+**11. [Test Configuration (conftest.py)](#-conftest.py---test-configuration--fixtures)**
+   - BASE_URL configuration
+   - base_url fixture (session scope)
+   - unique_user_credentials fixture (timestamp generation)
+   - authenticated_headers fixture (JWT token creation)
+
+**12. [Unit Tests (test_models.py)](#-file-2-test_modelspy---unit-tests-5-tests) - 5 Tests**
+   - Test 1: Password hashing verification
+   - Test 2: User serialization to dictionary
+   - Test 3: Event with empty RSVPs
+   - Test 4: Event RSVP counting & filtering
+   - Test 5: RSVP serialization
+
+**13. [Integration Tests (test_api.py)](#-file-3-test_apipy---integration-tests-8-tests) - 12 Tests**
+
+   **Happy Path (6 Tests)**
+   - Test 6: Health endpoint check
+   - Test 7: User registration
+   - Test 8: User login & JWT token
+   - Test 9: Event creation with authentication
+   - Test 10: RSVP to public event (no auth)
+   - Test 11: Get all events
+
+   **Error Handling (6 Tests)**
+   - Test 12: Duplicate username rejection
+   - Test 13: Event creation without auth
+   - Test 14: Protected event access control
+   - Test 15: Invalid event ID (404)
+   - Test 16: Missing required fields
+   - Test 17: RSVP to non-existent event
+
+**14. [Designing New Tests](#-designing-new-tests)**
+   - Test naming conventions & patterns
+   - Happy path vs error case testing
+   - Using fixtures effectively
+   - Testing checklist (10 points)
+   - Example test design scenarios
+
+---
+
+### ⚙️ CI/CD Pipeline & Automation
+
+**15. [CI/CD Pipeline (v5)](#️-cicd-pipeline---github-actions-workflow-version-5)**
+   - Workflow Overview & Triggers
+   - Complete Pipeline Architecture Diagram
+
+   **CI Job: Build, Test, and Clean**
+   - 8 detailed stages (Checkout, Docker Buildx, Build, Run, Health Check, Python Setup, Tests, Cleanup)
+   - Docker caching strategy
+   - Health check implementation
+   - Test suite execution (17 tests)
+
+   **CD Job: Publish, Deploy, and Smoke Test**
+   - Job configuration (needs: test, environment: production)
+   - Docker Hub authentication & login
+   - Build and Push with 3-tag strategy (latest, SHA, branch)
+   - Render webhook trigger
+   - 60-second rollout wait
+   - Live smoke test against production
+
+   - Execution Timeline (5-8 minutes total)
+   - Failure Scenarios & Recovery
+   - Critical Improvements (v4 vs v5)
+
+**16. [GitHub Actions Secrets Configuration](#-github-actions-secrets-configuration)**
+   - 4 Required Secrets Table (DOCKERHUB_USERNAME, DOCKERHUB_TOKEN, RENDER_DEPLOY_HOOK, RENDER_BASE_URL)
+   - How to Create Docker Hub PAT
+   - How to Get Render Deploy Hook
+   - Where to find each secret
+
+---
+
+### 🌐 Production Deployment & Render
+
+**17. [Render Deployment Platform – Significance & Usage](#-render-deployment-platform--significance--usage)**
+   - What is Render? (6 key features)
+   - Why Render for this project? (significance table)
+   - Render vs Traditional Hosting comparison
+   - Service Configuration (all details)
+   - Health Check Endpoint (local & production)
+   - Complete 10-step Deployment Flow
+
+   **Render Usage Guide (7 Sections)**
+   - Accessing Your Service (Dashboard & live application)
+   - Viewing Deployment Logs (what to look for)
+   - Checking Service Status (healthy vs unhealthy)
+   - Manual Deployment (3 options)
+   - Environment Variables
+   - Rollback to Previous Version
+   - Monitoring & Alerts
+   - Common Issues & Solutions (7 troubleshooting cases)
+
+**18. [Webhook & Environment Details](#-webhook--environment-details)**
+   - Render Deployment Webhook (source & how it works)
+   - Port Configuration explanation
+   - OpenAPI Specification configuration
+   - Environment Variables in Production
+   - Database initialization on startup
+
+---
+
+### 📋 Production Operations
+
+**19. [Deployment Checklist](#-deployment-checklist)**
+   - 8-point pre-launch verification
+   - Python version check
+   - Port configuration verification
+   - Secrets configuration validation
+   - Docker Hub accessibility
+   - CI/CD pipeline testing
+   - Production URL reachability
+
+**20. [Troubleshooting & Management](#-troubleshooting--management)**
+   - Docker management commands
+   - Container status checking
+   - Log viewing and analysis
+   - Common error scenarios
+   - Recovery procedures
+
+---
+
+### 🎯 Showcase & Resources
+
+**21. [Showcase Your Work](#-showcase-your-work)**
+   - ✨ Live Production Deployment
+   - 🌐 Production API (Render)
+   - 🐳 Docker Hub Repository
+   - 💻 GitHub Repository & Source Code
+   - 📊 Production Status Dashboard
+   - 🎓 What This Project Demonstrates
+
+---
+
+### 📊 Key Statistics
+
+| Metric | Count |
+|--------|-------|
+| **Total Lines of Documentation** | 3,738 |
+| **Tests Documented** | 17 (5 unit + 12 integration) |
+| **API Endpoints** | 8 major endpoints |
+| **Database Models** | 3 (User, Event, RSVP) |
+| **Docker Files** | 2 (Dockerfile, docker-compose.yml) |
+| **CI/CD Pipeline Stages** | 15 (8 CI + 7 CD) |
+| **GitHub Secrets** | 4 required |
+| **Production Links** | 3 (Render, Docker Hub, GitHub) |
+| **File Types Documented** | 10+ |
+
+---
+
+### 🔍 Quick Search Guide
+
+**Looking for specific topics?**
+
+- **How to set up locally?** → [Getting Started](#-getting-started)
+- **How to run tests?** → [Test Configuration](#-conftest.py---test-configuration--fixtures)
+- **How to deploy?** → [CI/CD Pipeline](#️-cicd-pipeline---github-actions-workflow-version-5)
+- **API endpoints?** → [API Reference](#-api-reference)
+- **Docker info?** → [Docker Setup](#-docker-setup--usage-guide)
+- **Production issues?** → [Troubleshooting](#-troubleshooting--management)
+- **Test the API?** → [Live Resources](#-live-resources--production-links)
+- **Render details?** → [Render Deployment](#-render-deployment-platform--significance--usage)
+- **GitHub Actions?** → [CI/CD Pipeline](#️-cicd-pipeline---github-actions-workflow-version-5)
+- **Database schema?** → [Database Models](#-database-models)
 
 ---
 
@@ -23,7 +368,7 @@ A Flask-based REST API for managing events and RSVPs with role-based access cont
 ```
 evently-api/
 ├── README.md                    # Project documentation
-├── Dockerfile                   # Docker image configuration (Python 3.9-slim)
+├── Dockerfile                   # Docker image configuration (Python 3.11-slim, linux/amd64)
 ├── docker-compose.yml           # Docker Compose configuration (build & run)
 ├── app.py                       # Flask application factory & initialization
 ├── config.py                    # Configuration (secrets, database, JWT settings)
@@ -86,7 +431,7 @@ evently-api/
 
 The `Dockerfile` at the root directory contains:
 ```dockerfile
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
@@ -100,12 +445,17 @@ EXPOSE 4000
 CMD ["python", "app.py"]
 ```
 
-**Purpose**: Defines the blueprint for building a Docker image that:
-- Uses Python 3.9-slim as the lightweight base image
-- Installs all Python dependencies from requirements.txt
-- Copies the entire application to `/app` directory
-- Exposes port 4000 for the Flask API
-- Runs the application with `python app.py`
+**Configuration Details:**
+- **Base Image**: `python:3.11-slim` - Lightweight Python 3.11 runtime for optimal performance
+- **Working Directory**: `/app` - All application code copied here
+- **Dependency Installation**: Installs all packages from `requirements.txt` in one layer
+- **Port Exposure**: `4000` - Matches Flask application port configuration
+- **Startup Command**: `python app.py` - Runs Flask development server
+
+**Environment Variables (set in docker-compose.yml):**
+- `FLASK_APP=app.py` - Points Flask to the application entry point
+- `FLASK_RUN_HOST=0.0.0.0` - Binds Flask to all network interfaces (required for container communication)
+- `FLASK_RUN_PORT=4000` - Sets Flask to listen on port 4000
 
 #### docker-compose.yml
 
@@ -207,6 +557,9 @@ tests/
 ### 1. Local Setup and Build
 
 Use these commands to build your image and start the container locally using Docker Compose.
+
+**⚠️ Important Architecture Note:**
+If you're developing on a **Mac system**, the `docker-compose.yml` includes `platform: linux/amd64` to ensure compatibility with Render hosting. This forces Docker to build for the Linux AMD64 architecture even on Mac, preventing deployment failures.
 
 **Build and Start:**
 ```bash
@@ -336,27 +689,127 @@ This file acts as the control panel for your container. It defines how the image
 - **One-Command Setup**: Allows you to build and start the entire project using `docker compose up -d`
 - **Port Mapping**: Bridges the container to your local machine (e.g., `4000:4000`) so the API is accessible at `localhost`
 - **Environment Control**: Sets critical Flask variables like `FLASK_APP` and `FLASK_RUN_PORT` dynamically
+- **Platform Specification**: Ensures compatibility across different architectures (Intel/AMD vs Mac)
 
-**Typical docker-compose.yml Structure:**
+**docker-compose.yml Structure:**
 ```yaml
 version: '3.8'
 
 services:
   api:
+    platform: linux/amd64
     build: .
+    image: abhisakh/events-api
+    container_name: events-container
     ports:
       - "4000:4000"
     environment:
       - FLASK_APP=app.py
+      - FLASK_RUN_HOST=0.0.0.0
       - FLASK_RUN_PORT=4000
-    volumes:
-      - .:/app
-    command: python app.py
 ```
+
+**Critical Configuration Details:**
+
+| Configuration | Value | Purpose |
+|---------------|-------|---------|
+| `platform` | `linux/amd64` | Forces build/run on Linux AMD64 architecture (required for Render compatibility) |
+| `build` | `.` | Builds image from Dockerfile in current directory |
+| `image` | `abhisakh/events-api` | Names the image for Docker Hub push |
+| `container_name` | `events-container` | Sets container name for easy reference |
+| `ports` | `4000:4000` | Maps container port 4000 to local port 4000 |
+| `FLASK_RUN_HOST` | `0.0.0.0` | Binds Flask to all network interfaces (required for container networking) |
+| `FLASK_RUN_PORT` | `4000` | Sets Flask internal port to 4000 |
+
+**Platform Architecture Explanation:**
+
+The `platform: linux/amd64` line is **CRITICAL** for cross-platform compatibility:
+
+- **Mac Systems** use `linux/arm64` architecture (Apple Silicon) or `darwin/amd64` (Intel Mac)
+- **Render Hosting** only supports `linux/amd64` (standard Linux server architecture)
+- **GitHub Actions CI** runs on `linux/amd64` by default
+
+**Without this specification:**
+- ❌ Mac users build images in `linux/arm64`
+- ❌ Images won't run on Render (architecture mismatch)
+- ❌ Deployment fails: `Error: exec format error`
+
+**With this specification:**
+- ✅ All developers build `linux/amd64` images regardless of their OS
+- ✅ Images work seamlessly on Render
+- ✅ CI/CD pipeline compatible
+- ✅ Production deployments succeed
 
 ---
 
-## 🚀 Usage Instructions
+## 🏗️ Docker Architecture Compatibility
+
+### The Platform Specification Problem
+
+When developing on different operating systems, Docker can build images for different CPU architectures:
+
+| OS | Default Architecture | Docker Build Output |
+|----|----------------------|----------------------|
+| **Mac (Apple Silicon)** | `linux/arm64` | ARM64 Linux image |
+| **Mac (Intel)** | `linux/amd64` | AMD64 Linux image |
+| **Linux (Intel/AMD)** | `linux/amd64` | AMD64 Linux image |
+| **Windows** | `linux/amd64` | AMD64 Linux image |
+
+### Why This Matters for Render
+
+Render hosting infrastructure uses **Linux servers with AMD64 architecture** exclusively.
+
+**Scenario Without `platform: linux/amd64`:**
+```
+Mac Developer builds image
+    ↓
+Docker creates linux/arm64 image (Apple Silicon default)
+    ↓
+Image pushed to Docker Hub as abhisakh/events-api:latest
+    ↓
+Render pulls image
+    ↓
+❌ FATAL ERROR: exec format error
+   (Render expects linux/amd64, got linux/arm64)
+```
+
+**Scenario With `platform: linux/amd64`:**
+```
+Mac Developer builds image
+    ↓
+Docker Buildx emulates linux/amd64
+    ↓
+Image created in correct architecture
+    ↓
+Image pushed to Docker Hub as abhisakh/events-api:latest
+    ↓
+Render pulls image
+    ↓
+✅ SUCCESS: Image runs perfectly
+```
+
+### How to Verify Architecture
+
+**Check your image architecture:**
+```bash
+docker image inspect abhisakh/events-api | grep -i architecture
+```
+
+**Expected output:**
+```json
+"Architecture": "amd64"
+```
+
+### Common Architecture Issues
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| `exec format error` on Render | Wrong architecture (arm64 instead of amd64) | Add `platform: linux/amd64` to docker-compose.yml |
+| Image builds slowly on Mac | Emulation overhead | Expected behavior - Buildx emulates architecture |
+| Different sizes for same image | Different architectures have different sizes | Verify with `docker image inspect` |
+| Can't run on Linux after building on Mac | Architecture mismatch | Rebuild with `platform: linux/amd64` specified |
+
+---
 
 ### Local Development
 
@@ -441,11 +894,15 @@ docker inspect events-container
 
 ---
 
-## ⚙️ CI/CD Pipeline - GitHub Actions Workflow
+## ⚙️ CI/CD Pipeline - GitHub Actions Workflow (Version 5)
 
 ### Overview
 
-The **GitHub Actions CI pipeline** (`ci.yml`) automatically builds, tests, and validates your application every time code is pushed to the `main` branch or a pull request is created.
+The **GitHub Actions CI/CD pipeline** (`ci.yml`) automates the complete software delivery process:
+- **CI Job**: Builds, tests, and validates your application locally
+- **CD Job**: Publishes to Docker Hub and deploys to Render production
+
+**Workflow Name**: "From Dev to Prod 5 – Deploying the Events API"
 
 **Workflow File Location**: `.github/workflows/ci.yml`
 
@@ -455,42 +912,407 @@ The **GitHub Actions CI pipeline** (`ci.yml`) automatically builds, tests, and v
 
 ---
 
-### Pipeline Architecture Diagram
+### Complete Pipeline Architecture Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                     GitHub Actions CI Pipeline                          │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  1️⃣  CHECKOUT                                                          │
-│  └─► actions/checkout@v4                                              │
-│      (Clone repository code)                                           │
-│           │                                                             │
-│           ▼                                                             │
-│  2️⃣  DOCKER BUILD                                                      │
-│  ├─► Set up Docker Buildx                                             │
-│  ├─► Build Docker Image (cache optimization)                          │
-│  │   └─► events-api:latest                                            │
-│  └─► Run Containerized API (Port 4000)                                │
-│           │                                                             │
-│           ▼                                                             │
-│  3️⃣  HEALTH CHECK                                                      │
-│  ├─► Wait for API startup (3 seconds)                                 │
-│  └─► curl http://localhost:4000/api/health ✅                         │
-│           │                                                             │
-│           ▼                                                             │
-│  4️⃣  TEST SUITE                                                        │
-│  ├─► Set up Python 3.9                                                │
-│  ├─► Install dependencies (pip install -r requirements.txt)           │
-│  └─► Run pytest -v (5 unit + 12 integration tests)                    │
-│           │                                                             │
-│           ▼                                                             │
-│  5️⃣  CLEANUP                                                           │
-│  └─► Stop & remove Docker container                                   │
-│      (Always runs, even if tests fail)                                 │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                   GitHub Actions CI/CD Pipeline (v5)                         │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  🔄 TRIGGER: Push to main OR Pull Request                                   │
+│           │                                                                  │
+│           ▼                                                                  │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                    📋 CI JOB: TEST (Always Runs)                    │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │                                                                     │   │
+│  │  1️⃣  Checkout Code                                                 │   │
+│  │  2️⃣  Set up Docker Buildx                                          │   │
+│  │  3️⃣  Build Docker Image (linux/amd64 + caching)                    │   │
+│  │  4️⃣  Run Containerized API (localhost:4000)                        │   │
+│  │  5️⃣  Health Check (curl /api/health)                               │   │
+│  │  6️⃣  Install Python 3.9 dependencies                               │   │
+│  │  7️⃣  Run pytest -v (17 tests)                                      │   │
+│  │  8️⃣  Cleanup container                                             │   │
+│  │                                                                     │   │
+│  │  ✅ Result: PASS → Proceed to CD                                    │   │
+│  │  ❌ Result: FAIL → STOP (No deployment)                             │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│           │                                                                  │
+│           ▼ (Only if CI passes)                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │            🚀 CD JOB: DEPLOY (Conditional on CI Success)            │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │  Environment: production                                            │   │
+│  │  Requires: test job success                                         │   │
+│  │                                                                     │   │
+│  │  1️⃣  Checkout Code                                                 │   │
+│  │  2️⃣  Login to Docker Hub                                           │   │
+│  │  3️⃣  Set up Docker Buildx                                          │   │
+│  │  4️⃣  Build & Push Production Image (3 tags):                       │   │
+│  │      └─► latest (for current version)                              │   │
+│  │      └─► {SHA} (exact commit hash)                                 │   │
+│  │      └─► {BRANCH} (branch name)                                    │   │
+│  │  5️⃣  Trigger Render Webhook                                        │   │
+│  │  6️⃣  Wait 60s for Render rollout                                   │   │
+│  │  7️⃣  Live Smoke Test (/api/health on Render)                       │   │
+│  │                                                                     │   │
+│  │  ✅ Result: All tests pass → Production live!                       │   │
+│  │  ❌ Result: Any test fails → Rollback (Render still has old image) │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│           │                                                                  │
+│           ▼                                                                  │
+│  🎉 APPLICATION LIVE ON RENDER                                              │
+│     https://events-api-latest-rsgk.onrender.com                             │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+### CI Job: Build, Test, and Clean
+
+**Purpose**: Validates code quality and functionality before deployment
+
+**Key Features**:
+
+#### 1️⃣ Checkout Code
+```yaml
+- name: Checkout Code
+  uses: actions/checkout@v4
+```
+- Clones repository into CI environment
+- Makes all code available for building and testing
+
+#### 2️⃣ Set up Docker Buildx
+```yaml
+- name: Set up Docker Buildx
+  uses: docker/setup-buildx-action@v3
+```
+- Enables advanced Docker building features
+- Supports multi-platform builds and caching
+
+#### 3️⃣ Build Docker Image
+```yaml
+- name: Build Docker Image
+  uses: docker/build-push-action@v5
+  with:
+    context: .
+    file: ./Dockerfile
+    load: true
+    platforms: linux/amd64
+    tags: abhisakh/events-api:latest
+    cache-from: type=gha
+    cache-to: type=gha,mode=max
+```
+
+**Significance of Each Parameter**:
+
+| Parameter | Value | Why It Matters |
+|-----------|-------|----------------|
+| `platforms: linux/amd64` | ✨ **NEW** Explicitly specified | Ensures compatibility with Render (no arm64 issues) |
+| `load: true` | Load into Docker daemon | Makes image available for local testing in CI |
+| `cache-from: type=gha` | GitHub Actions cache | Reuses previous build layers (60-80% faster) |
+| `cache-to: type=gha,mode=max` | Full cache storage | Stores all layers for maximum reuse |
+
+#### 4️⃣ Run Containerized API
+```yaml
+- name: Run Containerized API
+  run: |
+    docker run -d \
+      -p 4000:4000 \
+      --name events-container \
+      abhisakh/events-api:latest
+```
+- Starts the built image as a running container
+- Maps port 4000 for HTTP requests
+- Names container for cleanup reference
+
+#### 5️⃣ Health Check
+```yaml
+- name: Wait for API and Check Health
+  run: |
+    echo "Waiting for API to start..."
+    sleep 3
+    curl --fail --verbose http://localhost:4000/api/health
+```
+- Waits 3 seconds for Flask initialization
+- Makes HTTP request to health endpoint
+- Fails pipeline if health check fails (--fail flag)
+
+#### 6️⃣ Setup Python & Dependencies
+```yaml
+- name: Set up Python
+  uses: actions/setup-python@v5
+  with:
+    python-version: '3.9'
+    cache: 'pip'
+
+- name: Install Dependencies
+  run: |
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+```
+- Python 3.9 (matches project requirements)
+- `cache: 'pip'` saves dependencies for faster runs
+- Installs pytest and all test requirements
+
+#### 7️⃣ Run Test Suite
+```yaml
+- name: Run Test Suite
+  run: |
+    pytest -v
+```
+- Executes all 17 tests (5 unit + 12 integration)
+- `-v` flag provides verbose output
+- Tests run against localhost:4000 (from conftest.py)
+
+#### 8️⃣ Cleanup Container
+```yaml
+- name: Clean up Container
+  if: always()
+  runs: |
+    if [ "$(docker ps -aq -f name=events-container)" ]; then
+      docker stop events-container
+      docker rm events-container
+    else
+      echo "No container found to clean up."
+    fi
+```
+- `if: always()` - Runs even if tests fail
+- Stops and removes container completely
+- Frees up resources for next run
+- Prevents port conflicts
+
+---
+
+### CD Job: Publish, Deploy, and Smoke Test
+
+**Purpose**: Releases validated code to production on Render
+
+**Key Features**:
+
+#### Job Configuration
+```yaml
+deploy:
+  name: Publish, Deploy, and Smoke Test
+  needs: test
+  runs-on: ubuntu-latest
+  environment: production
+```
+
+**Significance**:
+
+| Configuration | Significance |
+|---------------|-------------|
+| `needs: test` | ✨ **CRITICAL** Only runs if CI job succeeds - prevents bad code from reaching production |
+| `environment: production` | ✨ **NEW** Marks as production environment, enforces GitHub protection rules |
+| `runs-on: ubuntu-latest` | Same runner as CI job, consistent environment |
+
+#### 1️⃣ Checkout Code
+```yaml
+- name: Checkout Code
+  uses: actions/checkout@v4
+```
+- Gets fresh code for building production image
+
+#### 2️⃣ Docker Hub Login
+```yaml
+- name: Log in to Docker Hub
+  uses: docker/login-action@v3
+  with:
+    username: ${{ secrets.DOCKER_HUB_USERNAME }}
+    password: ${{ secrets.DOCKER_HUB_TOKEN }}
+```
+
+**Significance**:
+- Authenticates with Docker Hub using GitHub Secrets
+- Must use correct secret names (no underscores)
+- Enables push to private/public repositories
+
+#### 3️⃣ Set up Docker Buildx
+```yaml
+- name: Set up Docker Buildx
+  uses: docker/setup-buildx-action@v3
+```
+- Same as CI, enables advanced features for CD build
+
+#### 4️⃣ Build and Push Production Image
+```yaml
+- name: Build and Push Production Image
+  uses: docker/build-push-action@v5
+  with:
+    context: .
+    file: ./Dockerfile
+    push: true
+    platforms: linux/amd64
+    tags: |
+      abhisakh/events-api:latest
+      abhisakh/events-api:${{ github.sha }}
+      abhisakh/events-api:${{ github.ref_name }}
+```
+
+**Significance - Three Tag Strategy** ✨ **NEW**:
+
+| Tag | Value Example | Purpose |
+|-----|--------------|---------|
+| `latest` | `abhisakh/events-api:latest` | Always points to current production version |
+| `${{ github.sha }}` | `abhisakh/events-api:a1b2c3d4...` | Exact commit hash - perfect for rollback |
+| `${{ github.ref_name }}` | `abhisakh/events-api:main` | Branch name - identifies which branch deployed |
+
+**Why Multiple Tags Matter**:
+- **`latest`** - Render always pulls this tag
+- **`SHA`** - If production breaks, can rollback to previous commit
+- **`branch`** - Track which branch is in production
+
+#### 5️⃣ Trigger Render Deployment
+```yaml
+- name: Trigger Render Deployment
+  run: |
+    echo "Triggering deployment via Render Webhook..."
+    curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+```
+
+**Significance**:
+- HTTP POST to Render webhook URL
+- Signals Render to pull latest image from Docker Hub
+- Automatic deployment without manual intervention
+
+#### 6️⃣ Wait for Render Rollout
+```yaml
+- name: Wait for Render Rollout
+  run: |
+    echo "Waiting 60 seconds for Render to deploy the new image..."
+    sleep 60
+```
+
+**Significance** ✨ **NEW**:
+- Waits 60 seconds for Render to:
+  - Pull image from Docker Hub
+  - Start new container
+  - Replace old container
+  - Reach stable state
+- Prevents premature smoke test on old version
+
+#### 7️⃣ Automated Smoke Test Against Live Render
+```yaml
+- name: Automated Smoke Test Against Live Render API
+  run: |
+    echo "Running smoke test against live production deployment..."
+    curl --fail --verbose "${{ secrets.RENDER_BASE_URL }}/api/health"
+```
+
+**Significance** ✨ **NEW**:
+- Makes HTTP request to **live production URL**
+- Verifies production deployment succeeded
+- If fails, alerts team to deployment issue
+- Tests actual user-facing endpoint
+
+---
+
+### Workflow Execution Timeline
+
+```
+Total Time: ~5-8 minutes
+
+0:00 → 0:30   Checkout, Docker Buildx setup, Build image      (~30s)
+0:30 → 1:00   Run container, health check, Python setup       (~30s)
+1:00 → 2:00   Install dependencies, Run 17 tests              (~60s)
+2:00 → 2:30   Cleanup container                               (~30s)
+
+           ↓ (CI passes - CD starts)
+
+2:30 → 3:00   Checkout, Docker Hub login, Buildx setup        (~30s)
+3:00 → 4:00   Build & Push image with 3 tags                  (~60s)
+4:00 → 4:30   Trigger Render webhook                          (~30s)
+4:30 → 5:30   Wait for Render rollout                         (~60s)
+5:30 → 5:45   Smoke test against live production              (~15s)
+
+5:45          🎉 Deployment complete! App live on Render
+```
+
+---
+
+### Critical Improvements in Version 5
+
+| Feature | Version 4 | Version 5 | Impact |
+|---------|-----------|-----------|--------|
+| Architecture | Not specified | `platforms: linux/amd64` | ✨ Fixes Render compatibility |
+| Job separation | Single job | Two jobs (test + deploy) | ✨ Prevents bad code from reaching prod |
+| Environment | Not marked | `environment: production` | ✨ Enforces GitHub protection rules |
+| Image tags | `latest` only | 3 tags (latest, SHA, branch) | ✨ Enables rollback capability |
+| Render wait | Immediate | 60 second wait | ✨ Ensures deployment completes |
+| Live smoke test | Not in CD | Against Render URL | ✨ Verifies production is up |
+| Python version | 3.11 | 3.9 | Adjusted for compatibility |
+
+---
+
+### Failure Scenarios and Recovery
+
+**Scenario 1: CI Tests Fail**
+```
+Push to main
+  ↓
+CI job runs and fails (pytest fails)
+  ↓
+❌ CD job NEVER runs (needs: test)
+  ↓
+Production remains unchanged
+  ↓
+Developer fixes issue and pushes again
+```
+
+**Scenario 2: CI Passes, CD Fails at Live Smoke Test**
+```
+Push to main
+  ↓
+CI job passes all tests
+  ↓
+CD job builds and pushes image
+  ↓
+Render receives webhook and deploys
+  ↓
+❌ Live smoke test fails (e.g., database connection issue)
+  ↓
+GitHub Actions marks deployment as failed
+  ↓
+⚠️ Render is still running new image (but broken)
+  ↓
+Developer must manually rollback to previous image tag or restart old container
+```
+
+**Scenario 3: Complete Success**
+```
+Push to main
+  ↓
+✅ CI all tests pass
+  ↓
+✅ CD builds image with 3 tags
+  ↓
+✅ Image pushed to Docker Hub
+  ↓
+✅ Render webhook triggered
+  ↓
+✅ Wait 60 seconds for rollout
+  ↓
+✅ Live smoke test passes
+  ↓
+🎉 Production live and verified!
+```
+
+---
+
+### Secrets Required for CI/CD
+
+See [GitHub Actions Secrets Configuration](#-github-actions-secrets-configuration) section for complete details.
+
+Required secrets:
+- `DOCKER_HUB_USERNAME` - Docker Hub account username
+- `DOCKER_HUB_TOKEN` - Docker Hub Personal Access Token
+- `RENDER_DEPLOY_HOOK` - Render webhook URL
+- `RENDER_BASE_URL` - Production URL for smoke testing
+
+---
 
 ---
 
@@ -767,14 +1589,371 @@ Add to your README:
 
 ---
 
-### Next Steps: From CI to CD
+### Continuous Deployment (CD) Job
 
-This CI pipeline validates your code. To extend to **Continuous Deployment**:
+**Purpose**: Automates the release and live deployment to production on Render.
 
-1. **Build Docker Image** ✅ (Already in pipeline)
-2. **Run Tests** ✅ (Already in pipeline)
-3. **Push to Docker Hub** (Add `docker/build-push-action` with push enabled)
-4. **Deploy to Production** (Add Kubernetes or cloud deployment step)
+**Steps Performed:**
+1. **Docker Hub Authentication** - Logs in with `secrets.DOCKERHUB_USERNAME` and `secrets.DOCKERHUB_TOKEN`
+2. **Build Production Image** - Builds Docker image from production Dockerfile
+3. **Tag Image** - Tags with multiple versions:
+   - `latest` - Latest stable release
+   - Commit SHA - Exact git commit reference
+   - Branch name - Development/main branch reference
+4. **Push to Docker Hub** - Pushes all tagged images to `abhisakh/events-api` repository
+5. **Trigger Render Deployment** - Calls `RENDER_DEPLOY_HOOK` webhook to signal Render
+6. **Smoke Test** - Runs final verification: `curl --fail --verbose "${{ secrets.RENDER_BASE_URL }}/api/health"`
+
+**Critical Fixes Applied:**
+- ✅ Corrected secret names: `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` (no underscores)
+- ✅ Created matching credentials in GitHub Repository Secrets
+- ✅ Fixed `Error: Username and password required` failure
+- ✅ Configured Render webhook integration
+
+---
+
+## 🔐 GitHub Actions Secrets Configuration
+
+All sensitive credentials are stored securely in GitHub Repository Secrets. Navigate to:
+**Settings > Secrets and variables > Actions > Repository secrets**
+
+### Required Secrets
+
+| Secret Name | Value | Purpose | How to Retrieve |
+|-------------|-------|---------|-----------------|
+| `DOCKERHUB_USERNAME` | Your Docker Hub username (abhisakh) | Docker Hub authentication | Docker Hub account profile page |
+| `DOCKERHUB_TOKEN` | Personal Access Token (PAT) | CLI authentication (instead of password) | Docker Hub Account Settings > Security > New Access Token |
+| `RENDER_DEPLOY_HOOK` | Unique webhook URL from Render | Triggers deployment when image is pushed | Render Dashboard > Web Service > Settings > Deploy Hook |
+| `RENDER_BASE_URL` | Production URL (https://events-api-latest-rsgk.onrender.com) | Final smoke test endpoint | Render Dashboard service page |
+
+### How to Create Docker Hub PAT (Personal Access Token)
+
+1. Go to Docker Hub > Account Settings > Security
+2. Click "New Access Token"
+3. Give it a name: `github-actions`
+4. Grant read/write permissions
+5. Copy token and add to GitHub Secrets as `DOCKERHUB_TOKEN`
+
+### How to Get Render Deploy Hook
+
+1. Go to Render Dashboard > Web Service (`events-api-latest-rsgk`)
+2. Navigate to Settings > Deploy Hook
+3. Copy the webhook URL
+4. Add to GitHub Secrets as `RENDER_DEPLOY_HOOK`
+
+---
+
+## 🚀 Render Deployment Platform – Significance & Usage
+
+### What is Render?
+
+**Render** is a cloud hosting platform that:
+- ✅ Automatically deploys Docker containers from Docker Hub
+- ✅ Manages networking, SSL/HTTPS, and domain routing
+- ✅ Scales horizontally with increased traffic
+- ✅ Provides automatic backups and monitoring
+- ✅ Integrates seamlessly with GitHub webhooks
+- ✅ Offers free tier for educational/testing projects
+
+### Why Render for This Project?
+
+| Aspect | Significance |
+|--------|-------------|
+| **Docker-Native** | Pulls images from Docker Hub, no code repository needed |
+| **Zero-Configuration** | Automatic SSL, networking, and environment setup |
+| **Webhook Integration** | Deploys automatically when new image is pushed |
+| **Scalability** | Easy to upgrade from free tier to paid plans |
+| **Monitoring** | Real-time logs and health monitoring |
+| **linux/amd64** | Natively supports this architecture (no Mac compatibility issues) |
+
+### Render vs Traditional Hosting
+
+| Feature | Traditional Server | Heroku | AWS | Render |
+|---------|-------------------|--------|-----|--------|
+| **Deploy Docker** | Manual/Complex | Limited | Complex setup | ✅ Native |
+| **GitHub Webhooks** | Manual setup | ✅ Easy | ✅ But complex | ✅ Easy |
+| **SSL Certificates** | Manual renewal | ✅ Auto | ✅ But complex | ✅ Auto |
+| **Scaling** | Manual provisioning | Easy | Complex | ✅ Easy |
+| **Cost** | Varies | $5+/month | $0-1000+/month | Free tier + Pay-as-you-go |
+| **Learning Curve** | Steep | Medium | Very steep | ✅ Low |
+
+---
+
+## 🚀 Render Deployment Details
+
+Your application is hosted on Render with automatic deployment via GitHub Actions webhook.
+
+### Service Configuration
+
+| Detail | Value | Significance |
+|--------|-------|-------------|
+| **Service Name** | `events-api-latest-rsgk` | Unique identifier in Render dashboard |
+| **Service Type** | Web Service | Runs containerized application |
+| **Internal Port** | `4000` | Container listens on port 4000 |
+| **Exposed Port** | `443` (HTTPS) / `80` (HTTP) | Public-facing ports |
+| **Production URL** | `https://events-api-latest-rsgk.onrender.com` | Live application endpoint |
+| **Docker Image** | `abhisakh/events-api:latest` | Pulled from Docker Hub |
+| **Deployment Trigger** | GitHub Actions webhook | Automatic on image push |
+| **Health Check Path** | `/api/health` | Render monitors this endpoint |
+| **Health Check Interval** | Every 30 seconds | Automatic monitoring |
+
+### Health Check Endpoint
+
+Render continuously monitors your application health by calling:
+
+**Local Development**: `http://localhost:4000/api/health`
+
+**Production (Live)**: `https://events-api-latest-rsgk.onrender.com/api/health`
+
+**Expected Response** (200 OK):
+```json
+{
+    "status": "healthy"
+}
+```
+
+**What Render Does**:
+- ✅ Checks health every 30 seconds
+- ✅ If healthy (200) → Application is live
+- ✅ If unhealthy (5xx) → Marks service as failing
+- ✅ If no response → Service offline, may trigger restart
+
+### Automatic Deployment Flow
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    RENDER DEPLOYMENT FLOW                            │
+├──────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  1️⃣  Developer pushes code to main branch                           │
+│      └─► GitHub receives push event                                 │
+│                                                                      │
+│  2️⃣  GitHub Actions CI pipeline runs                                │
+│      └─► Runs 17 tests in Docker container                          │
+│      └─► If any test fails → STOP (no deployment)                   │
+│                                                                      │
+│  3️⃣  CI passes → CD job starts                                      │
+│      └─► Builds Docker image with 3 tags                            │
+│      └─► Pushes to Docker Hub (abhisakh/events-api)                 │
+│                                                                      │
+│  4️⃣  GitHub Actions triggers Render webhook                         │
+│      └─► Sends POST to RENDER_DEPLOY_HOOK URL                       │
+│      └─► Payload: {deploy_hook_id, ref, sha}                        │
+│                                                                      │
+│  5️⃣  Render receives webhook signal                                 │
+│      └─► Verifies webhook signature                                 │
+│      └─► Starts new deployment                                      │
+│                                                                      │
+│  6️⃣  Render pulls image from Docker Hub                             │
+│      └─► Pulls: abhisakh/events-api:latest                          │
+│      └─► Verifies image integrity                                   │
+│                                                                      │
+│  7️⃣  Render starts new container                                    │
+│      └─► Allocates resources (CPU, RAM)                             │
+│      └─► Maps port 4000 → 443 (HTTPS)                               │
+│      └─► Sets environment variables                                 │
+│                                                                      │
+│  8️⃣  Health check phase                                             │
+│      └─► Waits for application startup                              │
+│      └─► Calls /api/health every 5 seconds                          │
+│      └─► Waits for 200 OK response                                  │
+│                                                                      │
+│  9️⃣  Old container cleanup                                          │
+│      └─► Gracefully shuts down old container                        │
+│      └─► Traffic automatically routed to new container              │
+│                                                                      │
+│  🔟 GitHub Actions smoke test                                       │
+│      └─► Calls https://events-api-latest-rsgk.onrender.com/api/health
+│      └─► If healthy → Deployment success! ✅                        │
+│      └─► If unhealthy → Marks as failed ❌                          │
+│                                                                      │
+│  ✅ APPLICATION LIVE ON RENDER                                      │
+│     https://events-api-latest-rsgk.onrender.com                     │
+│                                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Render Usage Guide
+
+#### 1️⃣ Accessing Your Service
+
+**Dashboard**: https://dashboard.render.com
+- View service status
+- Check recent deployments
+- Monitor logs in real-time
+- Adjust environment variables
+
+**Live Application**: https://events-api-latest-rsgk.onrender.com
+- Test endpoints directly
+- Run API calls
+- Check health: https://events-api-latest-rsgk.onrender.com/api/health
+
+#### 2️⃣ Viewing Deployment Logs
+
+**In Render Dashboard**:
+1. Go to Service → "events-api-latest-rsgk"
+2. Click "Logs" tab
+3. See real-time output from:
+   - Container startup
+   - Flask initialization
+   - Requests and responses
+   - Errors (if any)
+
+**What to Look For**:
+```
+✅ "Running on http://0.0.0.0:4000"    → Application started
+✅ "GET /api/health"                   → Health check passed
+❌ "ERROR" or exceptions                → Investigation needed
+❌ "Address already in use"             → Port conflict
+```
+
+#### 3️⃣ Checking Service Status
+
+**Healthy Status** (🟢 Green):
+```
+- Recent deployments successful
+- Health check passes
+- No error logs
+- Application responding
+```
+
+**Unhealthy Status** (🔴 Red):
+```
+- Deployment failed
+- Health check timing out
+- Application crashes
+- Port unavailable
+```
+
+#### 4️⃣ Manual Deployment (If Needed)
+
+If you need to redeploy without pushing code:
+
+**Option 1: Redeploy Last Build**
+1. Go to Render Dashboard → Service
+2. Click "Manual Deploy" → "Deploy latest"
+3. Render pulls last image from Docker Hub
+
+**Option 2: Force New Build**
+1. Push a dummy commit: `git commit --allow-empty -m "Trigger redeploy"`
+2. Push to main: `git push origin main`
+3. GitHub Actions automatically rebuilds and redeploys
+
+**Option 3: Update Image Tag**
+1. Edit CD job to push new tag
+2. Update Render to pull from new tag
+3. Manual redeploy from dashboard
+
+#### 5️⃣ Environment Variables
+
+To set environment variables in Render:
+
+1. Go to Service → "events-api-latest-rsgk"
+2. Click "Environment" tab
+3. Add variables:
+   ```
+   FLASK_APP=app.py
+   FLASK_RUN_HOST=0.0.0.0
+   FLASK_RUN_PORT=4000
+   ```
+4. Click "Save" → Automatic redeploy
+
+#### 6️⃣ Rollback to Previous Version
+
+If current deployment has issues:
+
+**Using Docker Tags**:
+1. Note the SHA tag of last good deployment (from logs)
+2. Update Render to pull from `abhisakh/events-api:{OLD_SHA}`
+3. Manual Deploy from dashboard
+4. Old version live immediately
+
+**Using Branch Tags**:
+1. Update to `abhisakh/events-api:main`
+2. Manual Deploy from dashboard
+
+#### 7️⃣ Monitoring & Alerts
+
+**Built-in Monitoring**:
+- Real-time logs
+- Deployment history
+- Health check status
+- Resource usage (CPU, RAM)
+
+**Set Up Alerts** (Premium):
+1. Service Settings → Notifications
+2. Email alerts on deployment failure
+3. Slack integration available
+
+---
+
+### Common Render Issues & Solutions
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| **Container won't start** | Port already in use / Memory limit | Check logs, increase resources |
+| **Health check failing** | App crashes on startup | View logs, check environment vars |
+| **Webhook not triggering** | Wrong webhook URL / expired token | Regenerate deploy hook in Render |
+| **Image not found error** | Docker Hub image deleted | Push new image and redeploy |
+| **Slow deployment** | Large image size / network latency | Expected, wait 2-3 minutes |
+| **SSL certificate error** | DNS not configured | Render auto-generates, wait 24h |
+| **503 Service Unavailable** | Container restarting | Check logs for crash reasons |
+
+---
+
+## 🌐 Webhook & Environment Details
+
+### Render Deployment Webhook
+
+**Source**: Generated in Render Service Settings
+
+**How It Works:**
+1. GitHub Actions successfully pushes image to Docker Hub
+2. Workflow triggers POST request to `RENDER_DEPLOY_HOOK`
+3. Render receives webhook signal
+4. Render pulls fresh image tag from Docker Hub repository
+5. New container deployed to production on port 4000
+6. Application automatically available at `https://events-api-latest-rsgk.onrender.com`
+
+### Port Configuration
+
+- **Container Internal Port**: `4000`
+- **Environment Variable**: `FLASK_RUN_PORT=4000`
+- **Render Exposed Port**: `4000`
+- **Public URL**: Maps to port `443` (HTTPS) / `80` (HTTP)
+
+### OpenAPI Specification
+
+The `openapi.yaml` file documents all API endpoints:
+- **Server URL (Local)**: `http://localhost:4000`
+- **Server URL (Production)**: `https://events-api-latest-rsgk.onrender.com`
+- **Base Path**: `/api`
+- **Health Check Path**: `/api/health` (Used in deployment verification)
+
+### Environment Variables in Production
+
+These are automatically set by Render:
+- `FLASK_APP=app.py`
+- `FLASK_RUN_HOST=0.0.0.0` (Required for container networking)
+- `FLASK_RUN_PORT=4000`
+- `FLASK_ENV=production` (Can be set in Render service settings)
+
+---
+
+## 📋 Deployment Checklist
+
+Before your first production deployment, verify:
+
+- ✅ Dockerfile uses `python:3.11-slim`
+- ✅ Port `4000` is exposed in Dockerfile
+- ✅ Environment variables set in docker-compose.yml
+- ✅ All 4 GitHub Actions Secrets configured
+- ✅ `RENDER_DEPLOY_HOOK` tested and working
+- ✅ Docker Hub repository is public or accessible
+- ✅ CI/CD workflow passes all tests
+- ✅ Production URL reachable and health check returns 200
 
 ---
 
@@ -2617,11 +3796,163 @@ For each endpoint, test:
 
 ---
 
-## 📚 Documentation
+## 📚 Documentation & Resources
 
+### Local Development Documentation
 - **Swagger UI**: http://localhost:4000/apidocs
 - **OpenAPI Spec**: http://localhost:4000/api/openapi.yaml
 
+### Production Documentation & Links
+- **Production API**: https://events-api-latest-rsgk.onrender.com
+- **Production Health Check**: https://events-api-latest-rsgk.onrender.com/api/health
+- **Production Swagger UI**: https://events-api-latest-rsgk.onrender.com/apidocs
+
 ---
 
-**Made with ❤️ for learning web development**
+## 🎯 Showcase Your Work
+
+### ✨ Live Production Deployment
+
+This project is fully deployed and running in production! Click the links below to see it in action:
+
+#### 🌐 **Production API - Live on Render**
+```
+https://events-api-latest-rsgk.onrender.com
+```
+
+**What you can do:**
+- ✅ Make API calls to the live endpoint
+- ✅ Test all 17 endpoints in production
+- ✅ View health status with Swagger UI
+- ✅ Access interactive API documentation
+- ✅ Download OpenAPI specification
+
+**🎯 To Test the API with Swagger UI:**
+
+1. **👉 [Open Swagger UI](https://events-api-latest-rsgk.onrender.com/apidocs)** ← Click here to get started!
+
+2. **Select Production Server** (⚠️ Important!):
+   - Look for **Servers** dropdown in Swagger UI
+   - Choose: `https://events-api-latest-rsgk.onrender.com`
+   - This ensures all test requests go to production
+
+3. **Start Testing**:
+   - Click any endpoint to expand
+   - Click "Try it out"
+   - Click "Execute"
+   - See live responses!
+
+**OpenAPI Server Configuration:**
+```yaml
+servers:
+  - url: https://events-api-latest-rsgk.onrender.com
+    description: Production server
+  - url: http://localhost:4000
+    description: Local development server
+```
+
+**Quick Test Examples:**
+```bash
+# Health Check
+GET https://events-api-latest-rsgk.onrender.com/api/health
+Response: { "status": "healthy" }
+
+# List All Events
+GET https://events-api-latest-rsgk.onrender.com/api/events
+Response: Array of all events in production
+
+# Register User (requires JSON body)
+POST https://events-api-latest-rsgk.onrender.com/api/auth/register
+Body: { "username": "testuser", "password": "TestPass123" }
+```
+
+---
+
+#### 🐳 **Docker Image - Published on Docker Hub**
+```
+docker pull abhisakh/events-api:latest
+```
+**Repository Details:**
+- ✅ Fully public Docker Hub repository
+- ✅ Multiple image tags (latest, commit SHA, branch)
+- ✅ linux/amd64 architecture for Render compatibility
+- ✅ Automated builds via GitHub Actions
+
+**👉 [View Docker Hub Repository](https://hub.docker.com/r/abhisakh/events-api)** ← See image details!
+
+---
+
+#### 💻 **Source Code - Open on GitHub**
+```
+github.com/abhisakh/events-api
+```
+**Repository Includes:**
+- ✅ Complete source code
+- ✅ Docker configuration (Dockerfile, docker-compose.yml)
+- ✅ CI/CD pipeline (GitHub Actions v5)
+- ✅ Complete test suite (17 tests)
+- ✅ Comprehensive README documentation
+- ✅ Automated deployment workflow
+
+**👉 [View GitHub Repository](https://github.com/abhisakh/events-api)** ← Explore source code!
+
+**CI/CD Pipeline Dashboard:**
+👉 [View GitHub Actions Pipeline](https://github.com/abhisakh/events-api/actions) ← Monitor builds & deployments!
+
+---
+
+### 📊 Production Status Dashboard
+
+| Component | Status | Link |
+|-----------|--------|------|
+| 🌐 **API Server** | ✅ Live & Running | [events-api-latest-rsgk.onrender.com](https://events-api-latest-rsgk.onrender.com) |
+| 🐳 **Docker Image** | ✅ Published | [hub.docker.com/r/abhisakh/events-api](https://hub.docker.com/r/abhisakh/events-api) |
+| 💻 **Source Code** | ✅ Open Source | [github.com/abhisakh/events-api](https://github.com/abhisakh/events-api) |
+| 🔄 **CI/CD Pipeline** | ✅ Automated | [github.com/abhisakh/events-api/actions](https://github.com/abhisakh/events-api/actions) |
+| 🔷 **Render Service** | ✅ Active | [dashboard.render.com](https://dashboard.render.com) → events-api-latest-rsgk |
+
+---
+
+### 🎓 What This Project Demonstrates
+
+This production deployment showcases:
+
+✅ **Full-Stack Development**
+- Flask REST API development
+- SQLAlchemy ORM with SQLite
+- JWT authentication & authorization
+- Role-based access control
+
+✅ **DevOps & Containerization**
+- Docker image creation
+- Multi-platform architecture (linux/amd64)
+- Docker Compose orchestration
+- Container optimization & caching
+
+✅ **CI/CD Automation**
+- GitHub Actions v5 workflow
+- Automated testing (17 tests)
+- Automated building & pushing to Docker Hub
+- Automated deployment to Render
+
+✅ **Cloud Deployment**
+- Render platform integration
+- Webhook automation
+- Automatic rollout & health checks
+- Production monitoring & logs
+
+✅ **Testing & Quality Assurance**
+- Unit tests (test_models.py - 5 tests)
+- Integration tests (test_api.py - 12 tests)
+- Health checks in CI/CD pipeline
+- Live smoke tests against production
+
+✅ **Documentation**
+- API documentation with Swagger UI
+- OpenAPI 3.0 specification
+- Comprehensive README (3,500+ lines)
+- Inline code comments & explanations
+
+---
+
+**Made with ❤️ for learning DevOps, Cloud Deployment, and Modern Development Practices**
